@@ -43,9 +43,9 @@ if (document.getElementById('uploadForm')) {
 
 // Function to approve a dog image (for display.html)
 window.approveDog = function(key) {
-  const dogRef = ref(db, `dogs/${key}`);
-  update(dogRef, { approved: true });
-};
+    const dogRef = firebase.database().ref(`dogs/${key}`);
+    dogRef.update({ approved: true });
+  };
 
 // Code to populate dogList and approvedList could be added in display.html and approved.html respectively
 

@@ -3,8 +3,14 @@ import { getDatabase, ref, set, get, update } from "firebase/database";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const firebaseConfig = {
-  // Your Firebase config here
-};
+    apiKey: "AIzaSyApzwzB3qTJuP6SW_nlm5Rj984Ic5cBMEs",
+    authDomain: "shapeartstest.firebaseapp.com",
+    projectId: "shapeartstest",
+    storageBucket: "shapeartstest.appspot.com",
+    messagingSenderId: "1021998130062",
+    appId: "1:1021998130062:web:819bbec47355ff812bfadf",
+    measurementId: "G-Z3XLCJN1KH"
+  };
 
 initializeApp(firebaseConfig);
 

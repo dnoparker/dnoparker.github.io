@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Approved Dog Images</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+</head>
+<body>
+
+  <h1>Approved Dog Images</h1>
+  <div id="approvedList"></div>
+
+  <script>
+    import { initializeApp } from "firebase/app";
+    import { getDatabase, ref, get } from "firebase/database";
+
+    const firebaseConfig = {
+      // Your Firebase config here
+    };
+
+    initializeApp(firebaseConfig);
+
+    const db = getDatabase();
+    const dbRef = ref(db, 'dogs');
+    get(dbRef).then(snapshot => {
+      snapshot.forEach(child => {
+        const dogData = child.val();
+        if (dogData.approved) {
+          const approvedElement = document.createElement('div');
+
+          approvedElement.innerHTML = `
+            <img src="${dogData.imageUrl}" width="100">
+            <p>${dogData.name} (${dogData.breed})</p>
+          `;
+
+          document.getElementById('approvedList').appendChild(approvedElement);
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

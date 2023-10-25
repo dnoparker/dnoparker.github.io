@@ -1,7 +1,21 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>Upload Dog Image</title>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages. lol</p>
+  <h1>Upload Your Dog's Image</h1>
+
+  <form id="uploadForm">
+    <input type="text" id="dogName" placeholder="Dog Name">
+    <input type="text" id="dogBreed" placeholder="Dog Breed">
+    <input type="file" id="dogImage">
+    <button type="submit">Upload</button>
+  </form>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

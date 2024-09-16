@@ -1,26 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Upload Dog Image</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Spheres</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+      "mindar-face-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-three.prod.js"
+    }
+  }
+  </script>
+  <script type="module" src="./js/main.js"></script>
+  <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
-  <h1>Upload Your Dog's Image</h1>
+  <div id="container"></div>
+  <video id="webcam" autoplay playsinline style="display: none;"></video>
+  <img id="captured-image" style="display:none; position: absolute; top: 10px; left: 10px; border: 2px solid black;" />
 
-  <form id="uploadForm">
-    <input type="text" id="dogName" placeholder="Dog Name">
-    <input type="text" id="dogBreed" placeholder="Dog Breed">
-    <input type="file" id="dogImage">
-    <button type="submit">Upload</button>
-  </form>
-
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-storage.js"></script>
-  
-  <script src="/script.js"></script>
-  <script src="script.js"></script>
 </body>
 </html>

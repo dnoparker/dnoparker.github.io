@@ -282,9 +282,12 @@ const captureScreenshot = async () => {
     const base64SwatchImage = await loadSwatchImage();
 
     // Send both images to the Vision API
-    sendToVisionAPIMulti(base64Image, base64SwatchImage).then(text => {
+    try {
+      const text = await sendToVisionAPIMulti(base64Image, base64SwatchImage);
       displayText(text);
-    });
+    } catch (error) {
+      console.error('Error sending images to Vision API:', error);
+    }
   };
 };
 

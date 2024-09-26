@@ -1,222 +1,132 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-face-three';
-import { Tone } from './tone.js';
 
-// Setup for accessing the webcam
-const video = document.getElementById('webcam');
+// -------------------------
+// Initialization
+// -------------------------
+
+// Set up webcam video element
+const videoElement = document.getElementById('webcam');
 
 navigator.mediaDevices.getUserMedia({ video: true })
   .then(stream => {
-    video.srcObject = stream;
+    videoElement.srcObject = stream;
   })
   .catch(error => {
     console.error('Error accessing webcam:', error);
   });
 
-const mindarThree = new MindARThree({
+// Initialize MindAR with Three.js
+const mindAR = new MindARThree({
   container: document.querySelector("#container"),
 });
 
-const { renderer, scene, camera } = mindarThree;
-const anchors = [];
+const { renderer, scene, camera } = mindAR;
 
+// Array to hold all facial anchors
+const facialAnchors = [];
+
+// Create anchors and attach cubes to each facial landmark
 for (let index = 0; index < 468; index++) {
-  // Create a new anchor and add it to the list
-  const anchorEye = mindarThree.addAnchor(index);
-  anchors.push(anchorEye);  // Store the anchor in the array
+  const anchor = mindAR.addAnchor(index);
+  facialAnchors.push(anchor);
 
-  const geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-  const box = new THREE.Mesh(geometry);
-  anchorEye.group.add(box);
+  const cubeGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+  const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+  anchor.group.add(cube);
 }
 
-
-const geometry = new THREE.BoxGeometry( 0.5, 0.5,   0.5 );
-const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-const cube = new THREE.Mesh( geometry, material );
- // Position the cube in the bottom-left corner
- cube.position.x = -1.5; // Adjust this value as needed
- cube.position.y = -1; // Adjust this value as needed
- cube.position.z = 0;  // Keeping Z position to 0 for simplicity
-scene.add( cube );
-
+// Set the camera position
 camera.position.z = 5;
 
-/// create an anchor dd
+// -------------------------
+// Animation Variables
+// -------------------------
 
-// const anchorEye = mindarThree.addAnchor(388)
-// const geometry = new THREE.BoxGeometry(0.1,0.1,0.1);
-// const box = new THREE.Mesh(geometry);
-// anchorEye.group.add(box);
+// Remove ROTATION_SPEED, isRotatingLeft, and isRotatingRight variables
 
+// -------------------------
+// Event Handlers
+// -------------------------
 
-const anchor = mindarThree.addAnchor(1);
-const childGroup = new THREE.Group();
-//  anchor.group.add(childGroup);
+/**
+ * Handles the click event on the "send to AI" button.
+ * Captures a screenshot and processes it.
+ * @param {Event} event - The click event
+ */
+const showLoading = () => {
+  document.getElementById('loading-animation').classList.remove('loading-hidden');
+};
 
-const tonesData = [
-  { text: 'bojangle', color: 0xF2D6B1, size: 0.1, url: 'https://shades-dancewear.com/product/ballet-socks/?attribute_pa_color=bojangles&attribute_pa_size=6-8-5', position: { x: 0.35, y: 0.35, z: 0 } },
-  { text: 'raven', color: 0xD9A084, size: 0.1, url: 'https://shades-dancewear.com/product/ballet-socks/?attribute_pa_color=raven&attribute_pa_size=6-8-5', position: { x: -0.35, y: 0.35, z: 0 } },
-  { text: 'ailey', color: 0xAC7A63, size: 0.1, url: 'https://shades-dancewear.com/product/ballet-socks/?attribute_pa_color=ailey&attribute_pa_size=6-8-5', position: { x: 0.35, y: -0.35, z: 0 } },
-  { text: 'pearl', color: 0x6C4F39, size: 0.1, url: 'https://shades-dancewear.com/product/ballet-socks/?attribute_pa_color=pearl&attribute_pa_size=6-8-5', position: { x: -0.35, y: -0.35, z: 0 } },
-];
+const hideLoading = () => {
+  document.getElementById('loading-animation').classList.add('loading-hidden');
+};
 
-const tones = tonesData.map(data => new Tone(data.text, data.color, data.size, data.url, data.position));
-
-tones.forEach(tone => {
-  childGroup.add(tone.sphere);
-  childGroup.add(tone.textSprite);
-});
-
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-const onMouseClick = (event) => {
-  const rect = renderer.domElement.getBoundingClientRect();
-  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(tones.map(tone => tone.sphere));
-
-  if (intersects.length > 0) {
-    window.open(intersects[0].object.userData.url, '_blank');
-  } else {
-    captureScreenshot();
+const handleSendToAPI = async (event) => {
+  showLoading();
+  try {
+    await captureScreenshot();
+    // The API call and text display will be handled in the captureScreenshot function
+  } catch (error) {
+    console.error('Error:', error);
+    hideLoading(); // Hide loading on error
   }
 };
 
-window.addEventListener('click', onMouseClick, false);
 
-const rotationSpeed = 0.02;
-let isRotatingLeft = false;
-let isRotatingRight = false;
-
-let lastCapturedImage = null;  // Variable to store the last captured image
-
-const onKeyDown = (event) => {
-  if (event.key === 'ArrowLeft') {
-    isRotatingLeft = true;
-  } else if (event.key === 'ArrowRight') {
-    isRotatingRight = true;
-  } else if (event.key === 'd' || event.key === 'D') {
-    if (lastCapturedImage) {
-      const imgElement = document.getElementById('captured-image');
-      imgElement.src = lastCapturedImage;
-      imgElement.style.display = 'block';
-    }
-  } else if (event.keyCode  == 32){
-    getSampleFaceColours();
-  }
+/**
+ * Handles the click event on the "get average colors" button.
+ * @param {Event} event - The click event
+ */
+const handleGetAverageColors = (event) => {
+  getSampleFaceColors();
 };
 
-const onKeyUp = (event) => {
-  if (event.key === 'ArrowLeft') {
-    isRotatingLeft = false;
-  } else if (event.key === 'ArrowRight') {
-    isRotatingRight = false;
-  } else if (event.key === 'd' || event.key === 'D') {
-    const imgElement = document.getElementById('captured-image');
-    imgElement.style.display = 'none';
-  } 
+// -------------------------
+// Event Listeners
+// -------------------------
+
+// Handle API send button click
+document.getElementById('send-to-ai').addEventListener('click', handleSendToAPI);
+
+// Handle get average colors button click
+document.getElementById('get-average-colors').addEventListener('click', handleGetAverageColors);
+
+
+// -------------------------
+// Animation Loop
+// -------------------------
+
+/**
+ * Animates the scene.
+ */
+const animateScene = () => {
+  // Remove rotation logic
 };
 
-window.addEventListener('keydown', onKeyDown, false);
-window.addEventListener('keyup', onKeyUp, false);
-
-const animate = () => {
-
-  cube.rotation.x += 0.01;
-	cube.rotation.y += 0.01;
-
-  if (isRotatingLeft) {
-    childGroup.rotation.z += rotationSpeed;
-  } else if (isRotatingRight) {
-    childGroup.rotation.z -= rotationSpeed;
-  }
-};
-
-const start = async () => {
-  await mindarThree.start();
+// Start the MindAR session and begin rendering
+const startAR = async () => {
+  await mindAR.start();
   renderer.setAnimationLoop(() => {
-    animate();
+    animateScene();
     renderer.render(scene, camera);
   });
 };
 
-start();
+startAR();
 
-const getSampleFaceColours = async () => {
-  // Create an offscreen canvas to blend video feed and Three.js scene
-  const canvas = document.createElement('canvas');
-  canvas.width = renderer.domElement.width;
-  canvas.height = renderer.domElement.height;
-  const context = canvas.getContext('2d');
+// -------------------------
+// Utility Functions
+// -------------------------
 
-  // Draw the video feed onto the canvas
-  context.translate(canvas.width, 0);
-  context.scale(-1, 1);
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  // Reset the transformation matrix
-  context.setTransform(1, 0, 0, 1, 0, 0);
-
-  // Get the final image data
-  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
-  let totalR = 0;
-  let totalG = 0;
-  let totalB = 0;
-  let count = 0;
-
-  // Loop through all anchors
-  anchors.forEach((anchor, index) => {
-    // Sample the colour at the position of the anchor
-    const anchorScreenPosition = getAnchorScreenPosition(anchor, renderer, camera);
-    const x = Math.floor(anchorScreenPosition.x);
-    const y = Math.floor(anchorScreenPosition.y);
-
-    if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
-      const pixelIndex = (y * canvas.width + x) * 4;
-      const r = imageData.data[pixelIndex];
-      const g = imageData.data[pixelIndex + 1];
-      const b = imageData.data[pixelIndex + 2];
-      
-      const hex = rgbToHex(r, g, b);
-      //console.log(`Colour at anchor ${index} position: ${hex}`);
-
-      // Update the colour of the box at the anchor position
-      const box = anchor.group.children.find(child => child instanceof THREE.Mesh);
-      if (box) {
-        box.material.color.set(hex);
-      }
-
-      // Accumulate colour values
-      totalR += r;
-      totalG += g;
-      totalB += b;
-      count++;
-    } else {
-      console.log(`Anchor ${index} position is out of canvas bounds.`);
-    }
-  });
-
-  if (count > 0) {
-    // Calculate the average colour
-    const avgR = Math.round(totalR / count);
-    const avgG = Math.round(totalG / count);
-    const avgB = Math.round(totalB / count);
-
-    const avgHex = rgbToHex(avgR, avgG, avgB);
-    cube.material.color.set(avgHex)
-    console.log(`Average Colour: ${avgHex}`);
-  } else {
-    console.log('No valid colours were sampled.');
-  }
-};
-
-
-// Function to convert RGB to HEX
+/**
+ * Converts RGB color values to Hex format.
+ * @param {number} r - Red component (0-255)
+ * @param {number} g - Green component (0-255)
+ * @param {number} b - Blue component (0-255)
+ * @returns {string} Hex color string
+ */
 const rgbToHex = (r, g, b) => {
   return '#' + [r, g, b].map(x => {
     const hex = x.toString(16);
@@ -224,23 +134,29 @@ const rgbToHex = (r, g, b) => {
   }).join('').toUpperCase();
 };
 
-// Function to get anchor screen position
-const getAnchorScreenPosition = (anchor, renderer, camera) => {
-  const worldPosition = new THREE.Vector3();
-  anchor.group.getWorldPosition(worldPosition);
-  
-  const vector = worldPosition.clone().project(camera);
+/**
+ * Projects a 3D position to 2D screen coordinates.
+ * @param {THREE.Object3D} object - The object to project
+ * @param {THREE.Camera} camera - The camera used for projection
+ * @returns {Object} Screen coordinates { x, y }
+ */
+const getScreenPosition = (object, camera) => {
+  const vector = new THREE.Vector3();
+  object.getWorldPosition(vector);
+  vector.project(camera);
   const canvas = renderer.domElement;
-  const screenX = (vector.x + 1) / 2 * canvas.width;
-  const screenY = (-vector.y + 1) / 2 * canvas.height;
-
-  return { x: screenX, y: screenY };
+  const x = (vector.x + 1) / 2 * canvas.width;
+  const y = (-vector.y + 1) / 2 * canvas.height;
+  return { x: Math.floor(x), y: Math.floor(y) };
 };
 
-
-// Function to load and convert the swatch image to Base64
-const loadSwatchImage = async () => {
-  const response = await fetch('swatch.png');
+/**
+ * Loads an image and returns its Base64 representation.
+ * @param {string} imagePath - Path to the image file
+ * @returns {Promise<string>} Base64 string without the data prefix
+ */
+const loadImageAsBase64 = async (imagePath) => {
+  const response = await fetch(imagePath);
   const blob = await response.blob();
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -249,73 +165,120 @@ const loadSwatchImage = async () => {
   });
 };
 
+// -------------------------
+// Core Functionalities
+// -------------------------
+
+/**
+ * Captures a screenshot by blending the video feed and Three.js scene,
+ * then sends it to the Vision API along with a swatch image.
+ */
 const captureScreenshot = async () => {
-  // Create an offscreen canvas to blend video feed and Three.js scene
-  const canvas = document.createElement('canvas');
-  canvas.width = renderer.domElement.width;
-  canvas.height = renderer.domElement.height;
-  const context = canvas.getContext('2d');
+  // Create an offscreen canvas
+  const offscreenCanvas = document.createElement('canvas');
+  offscreenCanvas.width = renderer.domElement.width;
+  offscreenCanvas.height = renderer.domElement.height;
+  const ctx = offscreenCanvas.getContext('2d');
 
-  // Flip the context horizontally before drawing the video feed
-  context.translate(canvas.width, 0);
-  context.scale(-1, 1);
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  // Draw the mirrored video feed
+  ctx.translate(offscreenCanvas.width, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(videoElement, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-  // Reset the transformation matrix before drawing the Three.js scene
-  context.setTransform(1, 0, 0, 1, 0, 0);
+  // Reset transformation
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-  // Render the Three.js scene
+  // Render the Three.js scene onto the canvas
   renderer.render(scene, camera);
   const rendererImage = new Image();
   rendererImage.src = renderer.domElement.toDataURL('image/png');
   rendererImage.onload = async () => {
-    // Draw the Three.js scene on top of the video feed
-    //context.drawImage(rendererImage, 0, 0, canvas.width, canvas.height);
+    // Get the final image data
+    const base64Image = offscreenCanvas.toDataURL('image/png').split(',')[1];
 
-    // Get the final merged image as base64
-    const base64Image = canvas.toDataURL('image/png').split(',')[1];
-
-    // Store the last captured image
-    lastCapturedImage = base64Image;
-
-    // Load the swatch image and convert it to Base64
-    const base64SwatchImage = await loadSwatchImage();
+    // Load the swatch image as Base64
+    const base64Swatch = await loadImageAsBase64('swatch.png');
 
     // Send both images to the Vision API
-    try {
-      const text = await sendToVisionAPIMulti(base64Image, base64SwatchImage);
-      displayText(text);
-    } catch (error) {
-      console.error('Error sending images to Vision API:', error);
+    const responseText = await sendToVisionAPIMulti(base64Image, base64Swatch);
+    if (responseText) {
+      displayText(responseText);
+    } else {
+      displayText('No response from Vision API');
     }
   };
 };
 
+/**
+ * Samples colors from each facial anchor and updates cube colors accordingly.
+ */
+const getSampleFaceColors = async () => {
+  // Create an offscreen canvas to capture the video frame
+  const offscreenCanvas = document.createElement('canvas');
+  offscreenCanvas.width = renderer.domElement.width;
+  offscreenCanvas.height = renderer.domElement.height;
+  const ctx = offscreenCanvas.getContext('2d');
 
-// Function to send the screenshot to the Vision API
-const sendToVisionAPI = async (base64Image) => {
-  try {
-    const response = await fetch('https://us-central1-lightnightflutter-c94ae.cloudfunctions.net/sendToVisionAPI', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ base64Image })
-    });
+  // Draw the mirrored video feed
+  ctx.translate(offscreenCanvas.width, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(videoElement, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  // Reset transformation
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  // Get image data from the canvas
+  const imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+  let totalR = 0, totalG = 0, totalB = 0, count = 0;
+
+  facialAnchors.forEach((anchor, index) => {
+    const { x, y } = getScreenPosition(anchor.group, camera);
+
+    if (x >= 0 && x < offscreenCanvas.width && y >= 0 && y < offscreenCanvas.height) {
+      const pixelIndex = (y * offscreenCanvas.width + x) * 4;
+      const r = imageData.data[pixelIndex];
+      const g = imageData.data[pixelIndex + 1];
+      const b = imageData.data[pixelIndex + 2];
+
+      const hexColor = rgbToHex(r, g, b);
+
+      // Update the color of the cube attached to the anchor
+      const cube = anchor.group.children.find(child => child instanceof THREE.Mesh);
+      if (cube) {
+        cube.material.color.set(hexColor);
+      }
+
+      // Accumulate RGB values for average color
+      totalR += r;
+      totalG += g;
+      totalB += b;
+      count++;
+    } else {
+      console.warn(`Anchor ${index} is out of canvas bounds.`);
     }
+  });
 
-    const data = await response.json();
-    return data.content;
-  } catch (error) {
-    console.error('Error:', error);
+  if (count > 0) {
+    // Calculate and set the average color for the circle
+    const avgR = Math.round(totalR / count);
+    const avgG = Math.round(totalG / count);
+    const avgB = Math.round(totalB / count);
+    const averageHex = rgbToHex(avgR, avgG, avgB);
+
+    updateAverageColorCircle(averageHex);
+    console.log(`Average Color: ${averageHex}`);
+  } else {
+    console.log('No valid colors were sampled.');
   }
 };
 
-
-// Function to send the screenshot to the Vision API
+/**
+ * Sends two Base64 encoded images to the Vision API.
+ * @param {string} base64Image1 - First image in Base64
+ * @param {string} base64Image2 - Second image in Base64
+ * @returns {Promise<string>} The content returned by the API
+ */
 const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
   try {
     const response = await fetch('https://us-central1-lightnightflutter-c94ae.cloudfunctions.net/sendToVisionAPIMulti', {
@@ -333,38 +296,43 @@ const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
     const data = await response.json();
     return data.content;
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error sending images to Vision API:', error);
+    return null;
   }
 };
 
+// -------------------------
+// UI Handling
+// -------------------------
+
+/**
+ * Displays a text overlay on the screen with the provided content.
+ * @param {string} text - The text to display
+ */
 const displayText = (text) => {
-  // Remove existing text elements
-  const existingTextElements = document.querySelectorAll('.displayed-text');
-  existingTextElements.forEach(element => element.remove());
+  hideLoading();
+  // Remove any existing text overlays
+  const existingTexts = document.querySelectorAll('.displayed-text');
+  existingTexts.forEach(element => element.remove());
 
-  // Create and display the new text element
-  const textElement = document.createElement('div');
-  textElement.innerText = text;
-  textElement.className = 'displayed-text'; // Add a class for easier removal later
-  textElement.style.position = 'absolute';
-  textElement.style.top = '10px';
-  textElement.style.left = '10px';
-  textElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-  textElement.style.color = 'white';
-  textElement.style.padding = '15px';
-  textElement.style.borderRadius = '8px';
-  textElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
-  textElement.style.fontFamily = 'Arial, sans-serif';
-  textElement.style.fontSize = '16px';
-  textElement.style.zIndex = '1000';
+  // Create the text container
+  const textContainer = document.createElement('div');
+  textContainer.innerText = text;
+  textContainer.className = 'displayed-text';
 
-  // Create and add the dismiss button
-  const dismissButton = document.createElement('span');
-  dismissButton.innerText = 'X';
-  dismissButton.style.marginLeft = '10px';
-  dismissButton.style.cursor = 'pointer';
-  dismissButton.onclick = () => textElement.remove();
-  textElement.appendChild(dismissButton);
+  // Create the dismiss button
+  const dismissBtn = document.createElement('span');
+  dismissBtn.innerText = ' X';
+  dismissBtn.className = 'dismiss-btn';
+  dismissBtn.onclick = () => textContainer.remove();
+  textContainer.appendChild(dismissBtn);
 
-  document.body.appendChild(textElement);
+  // Append to the body
+  document.body.appendChild(textContainer);
+};
+
+// Update the average color circle
+const updateAverageColorCircle = (color) => {
+  const circle = document.getElementById('average-color-circle');
+  circle.style.backgroundColor = color;
 };

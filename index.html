@@ -1,9 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+  <!-- Meta tags for character set and viewport settings -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Link to Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <!-- Page title -->
   <title>AR Spheres</title>
+  
+  <!-- Import map for module imports -->
   <script type="importmap">
   {
     "imports": {
@@ -13,13 +22,68 @@
     }
   }
   </script>
+  
+  <!-- Main JavaScript file -->
   <script type="module" src="./js/main.js"></script>
+  
+  <!-- Navigation bar JavaScript file -->
+  <script src="./js/navBar.js"></script>
+  
+  <!-- Main CSS file -->
   <link rel="stylesheet" href="./css/styles.css">
+  
+  <!-- Google Fonts for Roboto -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body>
-  <div id="container"></div>
-  <video id="webcam" autoplay playsinline style="display: none;"></video>
-  <img id="captured-image" style="display:none; position: absolute; top: 10px; left: 10px; border: 2px solid black;" />
 
+<body>
+  <!-- Warning Modal -->
+  <div id="warningModal" class="modal">
+    <div class="modal-content">
+      <h2>AI Accuracy Warning</h2>
+      <p>Please be aware that AI-generated content may not always be accurate. Use this information with caution.</p>
+      <p>Additionally, please note that we use your camera to send images to the AI for processing, but we do not use or store this data for any other purpose. For more information on our privacy practices, please visit our <a href="/privacy">Privacy Page</a>.</p>
+      <label class="checkbox-label">
+        <input type="checkbox" id="agreeCheckbox"> I understand and agree to continue
+      </label>
+      <button id="continueButton" disabled>Continue</button>
+    </div>
+  </div>
+
+  <!-- Container for AR content -->
+  <div id="container"></div>
+  
+  <!-- Hidden video element for webcam feed -->
+  <video id="webcam" autoplay playsinline style="display: none;"></video>
+  
+  <!-- Hidden image element for captured image -->
+  <img id="captured-image" style="display:none; position: absolute; top: 10px; left: 10px; border: 2px solid black;" />
+  
+  <!-- Button to send data to AI -->
+  <button id="send-to-ai" class="button">Send to AI</button>
+  
+  <!-- Button row for additional actions -->
+  <div class="button-row">
+    <!-- Button to get average colors -->
+    <button id="get-average-colors" class="button">Get Average Colors</button>
+    <!-- Div to display average color -->
+    <div id="average-color-circle"></div>
+  </div>
+  
+  <!-- Tab bar for navigation -->
+  <div id="tab-bar">
+    <div class="tab active"><i class="fas fa-circle"></i> analyse</div>
+    <div class="tab"><i class="fas fa-eye"></i> view</div>
+    <div class="tab"><i class="fas fa-check-circle"></i> finalise</div>
+  </div>
+  
+  <!-- Loading animation -->
+  <div id="loading-animation" class="loading-hidden">
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+  </div>
 </body>
+
 </html>

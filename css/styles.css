@@ -1,19 +1,217 @@
+:root {
+  --primary-color: #7c5738; /* Your current blue color */
+  --secondary-color: #b6825f; /* Your current blue color */
+}
+
 body {
     margin: 0;
-  }
-  
-  #container {
+    padding: 0;
+    box-sizing: border-box;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Roboto', Arial, sans-serif; /* Add this line */
+}
+
+#container {
     width: 100vw;
     height: 100vh;
     position: relative;
     overflow: hidden;
-  }
-  
-  .displayed-text {
+}
+
+.displayed-text {
     position: absolute;
     top: 10px;
     left: 10px;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.7);
     color: white;
-    padding: 10px;
-  }
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    font-family: 'Roboto', Arial, sans-serif; /* Using Roboto as discussed earlier */
+    font-size: 16px;
+    z-index: 1000;
+}
+
+.displayed-text .dismiss-btn {
+    margin-left: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px; /* Rounded corners for a modern look */
+    cursor: pointer; /* Changes cursor to pointer on hover */
+    transition: background-color 0.3s ease; /* Smooth transition for background color */
+}
+
+.button:hover {
+    background-color: var(--primary-color);
+}
+
+#send-to-ai {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+}
+
+#get-average-colors {
+    top: 100px;
+    left: 10px;
+}
+
+#tab-bar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  background-color: white;
+  padding: 10px 0;
+  border-radius: 50px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.tab {
+  color: rgb(0, 0, 0);
+  text-align: center;
+  flex-grow: 1;
+  padding: 1%;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+
+  -webkit-user-select: none;  /* Safari */
+  -ms-user-select: none;      /* IE 10 and IE 11 */
+  user-select: none;          /* Standard syntax */
+}
+
+.tab::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 2px;
+  background-color: grey;
+  transition: width 0.3s ease, height 0.3s ease, background-color 0.5s ease;
+}
+
+.tab.active::after {
+  background-color: var(--primary-color);
+  width: 50%;
+  height: 5px;
+}
+
+.tab i {
+  margin-bottom: 6px; /* Space between icon and text */
+  color: #585858; /* Different color for icons */
+  font-size: 1.5em; /* Slightly larger icons */
+  transition: color 0.3s ease;
+}
+
+.tab.active i {
+  color: var(--primary-color);/* Different color for the active tab icon */
+}
+
+.button-row {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 100px;
+    left: 10px;
+}
+
+#average-color-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #ffffff; /* Default color */
+    margin-left: 10px; /* Space between button and circle */
+}
+
+.loading-hidden {
+  display: none;
+}
+
+#loading-animation {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+}
+
+.circle {
+  width: 20px;
+  height: 20px;
+  background-color: var(--secondary-color);
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 5px;
+  animation: bob 0.8s ease-in-out infinite;
+}
+
+.circle:nth-child(1) { animation-delay: 0s; }
+.circle:nth-child(2) { animation-delay: 0.1s; }
+.circle:nth-child(3) { animation-delay: 0.2s; }
+.circle:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.modal {
+  display: flex;
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 101%;
+  background-color: rgba(0,0,0,0.75);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 20px;
+  text-align: center;
+  margin: 10px;
+}
+
+#continueButton {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+#continueButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.checkbox-label {
+  display: block;
+  margin-bottom: 15px;
+}
+
+#continueButton {
+  margin-top: 10px;
+}

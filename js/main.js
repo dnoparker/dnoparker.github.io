@@ -1,5 +1,10 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-face-three';
+import { tones, createToneCircles, highlightAISuggestedTone } from './tones.js';
+import { WedgeChart } from './wedge.js'; // Import the WedgeChart class
+
+// Add this near the top of your file, with other global variables
+const debug = true; // Set this to false when you want to use the real API
 
 // -------------------------
 // Initialization
@@ -23,6 +28,9 @@ const mindAR = new MindARThree({
 
 const { renderer, scene, camera } = mindAR;
 
+// Initialize WedgeChart with the existing scene, camera, and renderer
+let wedgeChart;
+
 // Array to hold all facial anchors
 const facialAnchors = [];
 
@@ -31,20 +39,22 @@ for (let index = 0; index < 468; index++) {
   const anchor = mindAR.addAnchor(index);
   facialAnchors.push(anchor);
 
-  const cubeGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-  const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-  anchor.group.add(cube);
+  if (index === 19) {
+    // Initialize WedgeChart and attach it to anchor 19
+    wedgeChart = new WedgeChart(scene, camera, renderer);
+    wedgeChart.setupEventListeners();
+    anchor.group.add(wedgeChart.group);
+    console.log("WedgeChart initialized and added to anchor 19");
+  } else {
+    const cubeGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+    const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    anchor.group.add(cube);
+  }
 }
 
 // Set the camera position
 camera.position.z = 5;
-
-// -------------------------
-// Animation Variables
-// -------------------------
-
-// Remove ROTATION_SPEED, isRotatingLeft, and isRotatingRight variables
 
 // -------------------------
 // Event Handlers
@@ -63,18 +73,6 @@ const hideLoading = () => {
   document.getElementById('loading-animation').classList.add('loading-hidden');
 };
 
-const handleSendToAPI = async (event) => {
-  showLoading();
-  try {
-    await captureScreenshot();
-    // The API call and text display will be handled in the captureScreenshot function
-  } catch (error) {
-    console.error('Error:', error);
-    hideLoading(); // Hide loading on error
-  }
-};
-
-
 /**
  * Handles the click event on the "get average colors" button.
  * @param {Event} event - The click event
@@ -87,30 +85,54 @@ const handleGetAverageColors = (event) => {
 // Event Listeners
 // -------------------------
 
-// Handle API send button click
-document.getElementById('send-to-ai').addEventListener('click', handleSendToAPI);
-
 // Handle get average colors button click
 document.getElementById('get-average-colors').addEventListener('click', handleGetAverageColors);
 
+document.addEventListener('DOMContentLoaded', () => {
+  const sendToAIButton = document.getElementById('send-to-ai');
+
+  // Remove the 'disabled' attribute from the button in HTML
+  sendToAIButton.removeAttribute('disabled');
+
+  sendToAIButton.addEventListener('click', async () => {
+    // Disable the button and change its appearance
+    sendToAIButton.disabled = true;
+    sendToAIButton.classList.add('button-disabled');
+
+    showLoading();
+    try {
+      await captureScreenshot();
+      // The API call and text display will be handled in the captureScreenshot function
+
+      // Simulating AI processing time with a timeout
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      console.log('AI response received and processed');
+    } catch (error) {
+      console.error('Error processing AI request:', error);
+      displayText('Error processing AI request');
+    }
+  });
+
+  createToneCircles();
+
+  // Ensure addWedgeClickListener is called
+  addWedgeClickListener();
+  console.log("DOMContentLoaded event completed"); // Debug log
+});
 
 // -------------------------
-// Animation Loop
+// Render Loop
 // -------------------------
-
-/**
- * Animates the scene.
- */
-const animateScene = () => {
-  // Remove rotation logic
-};
 
 // Start the MindAR session and begin rendering
 const startAR = async () => {
   await mindAR.start();
   renderer.setAnimationLoop(() => {
-    animateScene();
     renderer.render(scene, camera);
+    if (wedgeChart) {
+      wedgeChart.update();
+    }
   });
 };
 
@@ -128,50 +150,13 @@ startAR();
  * @returns {string} Hex color string
  */
 const rgbToHex = (r, g, b) => {
-  return '#' + [r, g, b].map(x => {
-    const hex = x.toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  }).join('').toUpperCase();
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
 /**
- * Projects a 3D position to 2D screen coordinates.
- * @param {THREE.Object3D} object - The object to project
- * @param {THREE.Camera} camera - The camera used for projection
- * @returns {Object} Screen coordinates { x, y }
- */
-const getScreenPosition = (object, camera) => {
-  const vector = new THREE.Vector3();
-  object.getWorldPosition(vector);
-  vector.project(camera);
-  const canvas = renderer.domElement;
-  const x = (vector.x + 1) / 2 * canvas.width;
-  const y = (-vector.y + 1) / 2 * canvas.height;
-  return { x: Math.floor(x), y: Math.floor(y) };
-};
-
-/**
- * Loads an image and returns its Base64 representation.
- * @param {string} imagePath - Path to the image file
- * @returns {Promise<string>} Base64 string without the data prefix
- */
-const loadImageAsBase64 = async (imagePath) => {
-  const response = await fetch(imagePath);
-  const blob = await response.blob();
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(',')[1]);
-    reader.readAsDataURL(blob);
-  });
-};
-
-// -------------------------
-// Core Functionalities
-// -------------------------
-
-/**
- * Captures a screenshot by blending the video feed and Three.js scene,
- * then sends it to the Vision API along with a swatch image.
+ * Handles the click event on the "send to AI" button.
+ * Captures a screenshot and processes it.
+ * @param {Event} event - The click event
  */
 const captureScreenshot = async () => {
   // Create an offscreen canvas
@@ -196,21 +181,30 @@ const captureScreenshot = async () => {
     // Get the final image data
     const base64Image = offscreenCanvas.toDataURL('image/png').split(',')[1];
 
-    // Load the swatch image as Base64
-    const base64Swatch = await loadImageAsBase64('swatch.png');
-
-    // Send both images to the Vision API
-    const responseText = await sendToVisionAPIMulti(base64Image, base64Swatch);
-    if (responseText) {
-      displayText(responseText);
+    let responseText;
+    if (debug) {
+      // Use lorem ipsum text in debug mode
+      responseText = "Based on the image swatch provide, this persons skin tone mostly closely resembles:Raven";
+      await new Promise(resolve => setTimeout(resolve, 3000));
     } else {
-      displayText('No response from Vision API');
+      // Load the swatch image as Base64
+      const base64Swatch = await loadImageAsBase64('swatch.png');
+
+      // Send both images to the Vision API
+      responseText = await sendToVisionAPIMulti(base64Image, base64Swatch);
+    }
+
+    if (responseText) {
+      displayTextWithImage(responseText, `data:image/png;base64,${base64Image}`);
+    } else {
+      displayTextWithImage('No response from Vision API', `data:image/png;base64,${base64Image}`);
     }
   };
 };
 
 /**
- * Samples colors from each facial anchor and updates cube colors accordingly.
+ * Handles the click event on the "get average colors" button.
+ * @param {Event} event - The click event
  */
 const getSampleFaceColors = async () => {
   // Create an offscreen canvas to capture the video frame
@@ -273,6 +267,16 @@ const getSampleFaceColors = async () => {
   }
 };
 
+const getScreenPosition = (object, camera) => {
+  const vector = new THREE.Vector3();
+  object.getWorldPosition(vector);
+  vector.project(camera);
+  const canvas = renderer.domElement;
+  const x = (vector.x + 1) / 2 * canvas.width;
+  const y = (-vector.y + 1) / 2 * canvas.height;
+  return { x: Math.floor(x), y: Math.floor(y) };
+};
+
 /**
  * Sends two Base64 encoded images to the Vision API.
  * @param {string} base64Image1 - First image in Base64
@@ -301,10 +305,6 @@ const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
   }
 };
 
-// -------------------------
-// UI Handling
-// -------------------------
-
 /**
  * Displays a text overlay on the screen with the provided content.
  * @param {string} text - The text to display
@@ -324,11 +324,58 @@ const displayText = (text) => {
   const dismissBtn = document.createElement('span');
   dismissBtn.innerText = ' X';
   dismissBtn.className = 'dismiss-btn';
-  dismissBtn.onclick = () => textContainer.remove();
+  dismissBtn.onclick = () => {
+    textContainer.remove();
+    // Re-enable the "Send to AI" button and restore its appearance
+    const sendToAIButton = document.getElementById('send-to-ai');
+    sendToAIButton.disabled = false;
+    sendToAIButton.classList.remove('button-disabled');
+  };
   textContainer.appendChild(dismissBtn);
 
   // Append to the body
   document.body.appendChild(textContainer);
+};
+
+const displayTextWithImage = (text, imageUrl) => {
+  hideLoading();
+  // Remove any existing text overlays
+  const existingTexts = document.querySelectorAll('.displayed-text');
+  existingTexts.forEach(element => element.remove());
+
+  // Create the text container
+  const textContainer = document.createElement('div');
+  textContainer.className = 'displayed-text';
+
+  // Create the image element
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.className = 'captured-image';
+  textContainer.appendChild(img);
+
+  // Create the text element
+  const textElement = document.createElement('p');
+  textElement.innerText = text;
+  textContainer.appendChild(textElement);
+
+  // Create the dismiss button
+  const dismissBtn = document.createElement('span');
+  dismissBtn.innerText = ' X';
+  dismissBtn.className = 'dismiss-btn';
+  dismissBtn.onclick = () => {
+    textContainer.remove();
+    // Re-enable the "Send to AI" button and restore its appearance
+    const sendToAIButton = document.getElementById('send-to-ai');
+    sendToAIButton.disabled = false;
+    sendToAIButton.classList.remove('button-disabled');
+  };
+  textContainer.appendChild(dismissBtn);
+
+  // Append to the body
+  document.body.appendChild(textContainer);
+
+  // Check and log the tone
+  checkAndLogTone(text);
 };
 
 // Update the average color circle
@@ -336,3 +383,28 @@ const updateAverageColorCircle = (color) => {
   const circle = document.getElementById('average-color-circle');
   circle.style.backgroundColor = color;
 };
+
+// Add this new function near the other event handlers
+const handleWedgeClick = (event) => {
+  console.log("handleWedgeClick called"); // Debug log
+  if (wedgeChart) {
+    console.log("Calling wedgeChart.onMouseClick"); // Debug log
+    wedgeChart.onMouseClick(event);
+  } else {
+    console.log("wedgeChart is not initialized"); // Debug log
+  }
+};
+
+// Add this new function near the other event handlers
+const addWedgeClickListener = () => {
+  console.log("Adding wedge click listener"); // Debug log
+  renderer.domElement.addEventListener('click', handleWedgeClick);
+};
+
+// Add a global click listener for debugging
+document.addEventListener('click', (event) => {
+  console.log('Document clicked at:', event.clientX, event.clientY);
+  console.log('Event target:', event.target);
+  // Ensure pointer events are enabled
+  event.target.style.pointerEvents = 'auto';
+});

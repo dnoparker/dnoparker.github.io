@@ -3,6 +3,14 @@
   --secondary-color: #ff6464; /* Your current blue color */
 }
 
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -14,13 +22,16 @@ body {
 }
 
 #container {
-    width: 100%;
-    height: 100%;
-    display: block;
-    pointer-events: auto; /* Ensure pointer events are enabled */
-    position: relative;
-    overflow: hidden;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
 }
+
 
 .displayed-text {
     position: absolute;

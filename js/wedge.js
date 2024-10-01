@@ -279,12 +279,12 @@ export class WedgeChart {
 
     // Public method to set up event listeners
     setupEventListeners() {
-        window.addEventListener('resize', this.debounce(() => {
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-            this.render();
-        }, 100), false);
+        // window.addEventListener('resize', this.debounce(() => {
+        //     this.renderer.setSize(window.innerWidth, window.innerHeight);
+        //     this.camera.aspect = window.innerWidth / window.innerHeight;
+        //     this.camera.updateProjectionMatrix();
+        //     this.render();
+        // }, 100), false);
 
         document.querySelectorAll('input[type="range"]').forEach(input => {
             input.addEventListener('input', this.debounce(() => {

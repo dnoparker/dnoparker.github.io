@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log("DOMContentLoaded event completed"); // Debug log
 });
 
+
 // -------------------------
 // Render Loop
 // -------------------------

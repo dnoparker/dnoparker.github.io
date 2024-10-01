@@ -132,35 +132,46 @@ document.addEventListener('DOMContentLoaded', () => {
   let startX = 0;
   let endX = 0;
 
+  // Minimum distance for a swipe to be considered valid
+  const minSwipeDistance = 30;
+
   // Touch event handlers
   const handleTouchStart = (event) => {
-    startX = event.changedTouches[0].screenX;
+    startX = event.touches[0].clientX;
   };
 
-  const handleTouchEnd = (event) => {
-    endX = event.changedTouches[0].screenX;
+  const handleTouchMove = (event) => {
+    endX = event.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
     handleSwipeGesture();
   };
 
   // Mouse event handlers
   const handleMouseDown = (event) => {
-    startX = event.screenX;
+    startX = event.clientX;
   };
 
-  const handleMouseUp = (event) => {
-    endX = event.screenX;
+  const handleMouseMove = (event) => {
+    endX = event.clientX;
+  };
+
+  const handleMouseUp = () => {
     handleSwipeGesture();
   };
 
   // Function to handle swipe gestures
   const handleSwipeGesture = () => {
-    if (endX < startX) {
-      // Swipe left
-      selectNextWedge();
-    }
-    if (endX > startX) {
-      // Swipe right
-      selectPreviousWedge();
+    const distance = endX - startX;
+    if (Math.abs(distance) > minSwipeDistance) {
+      if (distance < 0) {
+        // Swipe left
+        selectNextWedge();
+      } else {
+        // Swipe right
+        selectPreviousWedge();
+      }
     }
   };
 
@@ -183,12 +194,15 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Add event listeners for touch events
-  document.getElementById('container').addEventListener('touchstart', handleTouchStart, false);
-  document.getElementById('container').addEventListener('touchend', handleTouchEnd, false);
+  const container = document.getElementById('container');
+  container.addEventListener('touchstart', handleTouchStart, false);
+  container.addEventListener('touchmove', handleTouchMove, false);
+  container.addEventListener('touchend', handleTouchEnd, false);
 
   // Add event listeners for mouse events
-  document.getElementById('container').addEventListener('mousedown', handleMouseDown, false);
-  document.getElementById('container').addEventListener('mouseup', handleMouseUp, false);
+  container.addEventListener('mousedown', handleMouseDown, false);
+  container.addEventListener('mousemove', handleMouseMove, false);
+  container.addEventListener('mouseup', handleMouseUp, false);
 });
 
 

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MindARThree } from 'mindar-face-three';
 import { tones, createToneCircles, highlightAISuggestedTone } from './tones.js';
 import { WedgeChart } from './wedge.js'; // Import the WedgeChart class
+import { FaceObject } from './faceObject.js'; // Import the base FaceObject class
 
 // Add this near the top of your file, with other global variables
 const debug = true; // Set this to false when you want to use the real API
@@ -21,29 +22,32 @@ navigator.mediaDevices.getUserMedia({ video: true })
     console.error('Error accessing webcam:', error);
   });
 
+
 // Initialize MindAR with Three.js
 const mindAR = new MindARThree({
   container: document.querySelector("#container"),
 });
 
+
 const { renderer, scene, camera } = mindAR;
 
-// Initialize WedgeChart with the existing scene, camera, and renderer
-let wedgeChart;
+// Initialize an array to hold all face objects
+const faceObjects = [];
 
 // Array to hold all facial anchors
 const facialAnchors = [];
 
-// Create anchors and attach cubes to each facial landmark
+// Create anchors and attach objects to each facial landmark
 for (let index = 0; index < 468; index++) {
   const anchor = mindAR.addAnchor(index);
   facialAnchors.push(anchor);
 
   if (index === 19) {
     // Initialize WedgeChart and attach it to anchor 19
-    wedgeChart = new WedgeChart(scene, camera, renderer);
+    const wedgeChart = new WedgeChart(scene, camera, renderer);
     wedgeChart.setupEventListeners();
     anchor.group.add(wedgeChart.group);
+    faceObjects.push(wedgeChart); // Add to faceObjects array
     console.log("WedgeChart initialized and added to anchor 19");
   } else {
     const cubeGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
@@ -52,6 +56,7 @@ for (let index = 0; index < 468; index++) {
     anchor.group.add(cube);
   }
 }
+
 
 // Set the camera position
 camera.position.z = 5;
@@ -69,9 +74,11 @@ const showLoading = () => {
   document.getElementById('loading-animation').classList.remove('loading-hidden');
 };
 
+
 const hideLoading = () => {
   document.getElementById('loading-animation').classList.add('loading-hidden');
 };
+
 
 /**
  * Handles the click event on the "get average colors" button.
@@ -80,6 +87,7 @@ const hideLoading = () => {
 const handleGetAverageColors = (event) => {
   getSampleFaceColors();
 };
+
 
 // -------------------------
 // Event Listeners
@@ -114,10 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+
   createToneCircles();
 
   // Ensure addWedgeClickListener is called
-  addWedgeClickListener();
+  // addWedgeClickListener();
 
   // Add this new code for toggle functionality
   const toggleControlsButton = document.getElementById('toggle-controls');
@@ -127,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     controlsDiv.classList.toggle('collapsed');
     toggleControlsButton.textContent = controlsDiv.classList.contains('collapsed') ? 'Show Controls' : 'Hide Controls';
   };
+
 
   toggleControlsButton.addEventListener('click', toggleControls);
   toggleControlsButton.addEventListener('touchstart', toggleControls);
@@ -143,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startX = event.touches[0].clientX;
   };
 
+
   const handleTouchMove = (event) => {
     endX = event.touches[0].clientX;
   };
@@ -150,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const handleTouchEnd = () => {
     handleSwipeGesture();
   };
+
 
   // Mouse event handlers
   const handleMouseDown = (event) => {
@@ -164,37 +176,21 @@ document.addEventListener('DOMContentLoaded', () => {
     handleSwipeGesture();
   };
 
+
   // Function to handle swipe gestures
   const handleSwipeGesture = () => {
     const distance = endX - startX;
     if (Math.abs(distance) > minSwipeDistance) {
       if (distance < 0) {
         // Swipe left
-        selectNextWedge();
+        faceObjects.forEach(obj => obj.swipeLeft());
       } else {
         // Swipe right
-        selectPreviousWedge();
+        faceObjects.forEach(obj => obj.swipeRight());
       }
     }
   };
 
-  // Function to select the next wedge
-  const selectNextWedge = () => {
-    if (wedgeChart) {
-      const currentIndex = wedgeChart.slices.findIndex(slice => slice.userData.selected);
-      const nextIndex = (currentIndex + 1) % wedgeChart.slices.length;
-      wedgeChart.animateSlicesToNewDistribution(nextIndex);
-    }
-  };
-
-  // Function to select the previous wedge
-  const selectPreviousWedge = () => {
-    if (wedgeChart) {
-      const currentIndex = wedgeChart.slices.findIndex(slice => slice.userData.selected);
-      const previousIndex = (currentIndex - 1 + wedgeChart.slices.length) % wedgeChart.slices.length;
-      wedgeChart.animateSlicesToNewDistribution(previousIndex);
-    }
-  };
 
   // Add event listeners for touch events
   const container = document.getElementById('container');
@@ -218,11 +214,10 @@ const startAR = async () => {
   await mindAR.start();
   renderer.setAnimationLoop(() => {
     renderer.render(scene, camera);
-    if (wedgeChart) {
-      wedgeChart.update();
-    }
+    faceObjects.forEach(obj => obj.update());
   });
 };
+
 
 startAR();
 
@@ -241,10 +236,9 @@ const rgbToHex = (r, g, b) => {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
+
 /**
- * Handles the click event on the "send to AI" button.
- * Captures a screenshot and processes it.
- * @param {Event} event - The click event
+ * Captures a screenshot from the video and Three.js renderer.
  */
 const captureScreenshot = async () => {
   // Create an offscreen canvas
@@ -272,7 +266,7 @@ const captureScreenshot = async () => {
     let responseText;
     if (debug) {
       // Use lorem ipsum text in debug mode
-      responseText = "Based on the image swatch provide, this persons skin tone mostly closely resembles:Raven";
+      responseText = "Based on the image swatch provided, this person's skin tone mostly closely resembles: Raven";
       await new Promise(resolve => setTimeout(resolve, 3000));
     } else {
       // Load the swatch image as Base64
@@ -290,9 +284,9 @@ const captureScreenshot = async () => {
   };
 };
 
+
 /**
- * Handles the click event on the "get average colors" button.
- * @param {Event} event - The click event
+ * Gets sample face colors from the captured image.
  */
 const getSampleFaceColors = async () => {
   // Create an offscreen canvas to capture the video frame
@@ -339,6 +333,7 @@ const getSampleFaceColors = async () => {
     }
   });
 
+
   if (count > 0) {
     // Calculate and set the average color for the circle
     const avgR = Math.round(totalR / count);
@@ -350,6 +345,13 @@ const getSampleFaceColors = async () => {
   }
 };
 
+
+/**
+ * Get screen position of a 3D object.
+ * @param {THREE.Object3D} object - The 3D object.
+ * @param {THREE.Camera} camera - The camera.
+ * @returns {Object} x and y coordinates on the screen.
+ */
 const getScreenPosition = (object, camera) => {
   const vector = new THREE.Vector3();
   object.getWorldPosition(vector);
@@ -359,6 +361,7 @@ const getScreenPosition = (object, camera) => {
   const y = (-vector.y + 1) / 2 * canvas.height;
   return { x: Math.floor(x), y: Math.floor(y) };
 };
+
 
 /**
  * Sends two Base64 encoded images to the Vision API.
@@ -376,6 +379,7 @@ const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
       body: JSON.stringify({ base64Image1, base64Image2 })
     });
 
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -387,6 +391,7 @@ const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
     return null;
   }
 };
+
 
 /**
  * Displays a text overlay on the screen with the provided content.
@@ -420,6 +425,12 @@ const displayText = (text) => {
   document.body.appendChild(textContainer);
 };
 
+
+/**
+ * Displays a text overlay with an image on the screen.
+ * @param {string} text - The text to display
+ * @param {string} imageUrl - The URL of the image to display
+ */
 const displayTextWithImage = (text, imageUrl) => {
   hideLoading();
   // Remove any existing text overlays
@@ -461,20 +472,26 @@ const displayTextWithImage = (text, imageUrl) => {
   checkAndLogTone(text);
 };
 
+
 // Update the average color circle
 const updateAverageColorCircle = (color) => {
   const circle = document.getElementById('average-color-circle');
   circle.style.backgroundColor = color;
 };
 
-// Add this new function near the other event handlers
-const handleWedgeClick = (event) => {
-  if (wedgeChart) {
-    wedgeChart.onMouseClick(event);
-  }
-};
 
 // Add this new function near the other event handlers
-const addWedgeClickListener = () => {
-  renderer.domElement.addEventListener('click', handleWedgeClick);
-};
+// const handleWedgeClick = (event) => {
+//   if (faceObjects.length > 0) {
+//     faceObjects.forEach(obj => {
+//       if (obj instanceof WedgeChart) {
+//         obj.onMouseClick(event);
+//       }
+//     });
+//   }
+// };
+
+// Add this new function near the other event handlers
+// const addWedgeClickListener = () => {
+//   renderer.domElement.addEventListener('click', handleWedgeClick);
+// };

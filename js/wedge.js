@@ -1,25 +1,24 @@
 import * as THREE from 'three';
 import '@tweenjs/tween.js';
+import { tones } from './tones.js';
+import { FaceObject } from './faceObject.js';
 
 /**
  * WedgeChart class to manage pie chart slices within an existing Three.js scene.
+ * Inherits from FaceObject.
  */
-export class WedgeChart {
+export class WedgeChart extends FaceObject {
     constructor(scene, camera, renderer) {
-        this.scene = scene;
-        this.camera = camera;
-        this.renderer = renderer;
+        super(scene, camera, renderer);
 
-        // Create a group to hold all the slices
-        this.group = new THREE.Group();
-        this.scene.add(this.group); // Ensure the group is added to the scene
+        // Rotate the group to correct the orientation
+        this.group.rotation.z = Math.PI; // Rotate 180 degrees around the Z axis
 
-        // Initialize properties
+        // Initialize properties specific to WedgeChart
         this.slices = [];
         this.sliceValues = [];
         this.colors = [];
         this.sliceGeometries = [];
-        this.currentTween = null;
         this.currentHeights = [];
 
         // Raycaster setup
@@ -36,14 +35,18 @@ export class WedgeChart {
         ];
 
         // Bind methods
-        this.onMouseClick = this.onMouseClick.bind(this);
+        this.onMouseClick = this.onClick.bind(this);
         this.animate = this.animate.bind(this);
 
         // Initialize slices
-        this.initializeSlices(10);
+        this.initializeSlices(4);
 
         // Start animation
         this.animate();
+    }
+
+    initialize() {
+        // Any additional initialization if needed
     }
 
     initializeSlices(count) {
@@ -62,12 +65,14 @@ export class WedgeChart {
         this.currentHeights = [];
 
         // Initialize new slices
-        this.sliceValues = Array(count).fill(100 / count);
-        this.colors = this.generateColors(count);
-        this.currentHeights = Array(count).fill(parseFloat(document.getElementById('minOuterRadius').value));
+        const toneCount = tones.length;
+        this.sliceValues = Array(toneCount).fill(100 / toneCount); // Set slice values based on the number of tones
+        this.colors = tones.map(tone => tone.hex); // Use colors from tones
+        this.currentHeights = Array(toneCount).fill(parseFloat(document.getElementById('minOuterRadius').value));
         this.createSliceGeometries();
         this.updatePieChart();
     }
+
 
     createSliceGeometries() {
         console.log("createSliceGeometries");
@@ -170,6 +175,7 @@ export class WedgeChart {
             s1.x, s1.y
         );
 
+
         const shapeGeometry = new THREE.ShapeGeometry(shape);
         geometry.setAttribute('position', shapeGeometry.getAttribute('position'));
         geometry.setAttribute('normal', shapeGeometry.getAttribute('normal'));
@@ -236,28 +242,45 @@ export class WedgeChart {
         });
     }
 
-    render() {
-        this.renderer.render(this.scene, this.camera);
-    }
+    /**
+     * Override the generic onClick method with wedge-specific behavior
+     * @param {Event} event - The click event
+     */
+    onClick(event) {
+        super.onClick(event); // Call the parent class onClick method
 
-    onMouseClick(event) {
-        const container = document.getElementById('container');
-        const rect = container.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-        this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
         const intersects = this.raycaster.intersectObjects(this.group.children, true);
-
-        console.log("Intersects:", intersects); // Debug log
 
         if (intersects.length > 0) {
             const clickedSlice = intersects[0].object;
-            console.log("Clicked slice:", clickedSlice); // Debug log
+            console.log("Clicked slice:", clickedSlice);
             this.animateSlicesToNewDistribution(clickedSlice.userData.index);
+
+            // Visualization marker (optional)
+            this.addClickMarker(intersects[0].point);
         } else {
-            console.log("No slice intersected"); // Debug log
+            console.log('No wedge intersection detected');
         }
+    }
+
+    /**
+     * Add a temporary marker at the click point for visualization
+     * @param {THREE.Vector3} point - The point to place the marker
+     */
+    addClickMarker(point) {
+        const markerGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+        const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+
+        marker.position.copy(point);
+        this.scene.add(marker);
+
+        // Remove the marker after a short duration
+        setTimeout(() => {
+            this.scene.remove(marker);
+            marker.geometry.dispose();
+            marker.material.dispose();
+        }, 1000);
     }
 
     animate(time) {
@@ -266,23 +289,7 @@ export class WedgeChart {
         this.render();
     }
 
-    debounce(func, wait) {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-
-    // Public method to set up event listeners
     setupEventListeners() {
-        // window.addEventListener('resize', this.debounce(() => {
-        //     this.renderer.setSize(window.innerWidth, window.innerHeight);
-        //     this.camera.aspect = window.innerWidth / window.innerHeight;
-        //     this.camera.updateProjectionMatrix();
-        //     this.render();
-        // }, 100), false);
-
         document.querySelectorAll('input[type="range"]').forEach(input => {
             input.addEventListener('input', this.debounce(() => {
                 this.updatePieChart();
@@ -300,13 +307,52 @@ export class WedgeChart {
             }
         });
 
-        document.getElementById('container').addEventListener('click', this.onMouseClick, false);
-        console.log("Click event listener added to container"); // Debug log
+        // Update the click event listener
+        document.getElementById('container').addEventListener('click', this.onClick, false);
+        console.log("Click event listener added to container");
     }
 
-    update() {
-        // Update the position and rotation of the group based on the anchor's position
-        // This method will be called in the render loop
-        TWEEN.update();
+    debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    /**
+     * Override swipeLeft to handle left swipe behavior for WedgeChart.
+     */
+    swipeLeft() {
+        this.selectNextWedge();
+    }
+
+    /**
+     * Override swipeRight to handle right swipe behavior for WedgeChart.
+     */
+    swipeRight() {
+        this.selectPreviousWedge();
+    }
+
+    /**
+     * Select the next wedge.
+     */
+    selectNextWedge() {
+        if (this.slices.length > 0) {
+            const selectedIndex = this.slices.findIndex(slice => slice.userData.selected);
+            const nextIndex = (selectedIndex + 1) % this.slices.length;
+            this.animateSlicesToNewDistribution(nextIndex);
+        }
+    }
+
+    /**
+     * Select the previous wedge.
+     */
+    selectPreviousWedge() {
+        if (this.slices.length > 0) {
+            const selectedIndex = this.slices.findIndex(slice => slice.userData.selected);
+            const previousIndex = (selectedIndex - 1 + this.slices.length) % this.slices.length;
+            this.animateSlicesToNewDistribution(previousIndex);
+        }
     }
 }

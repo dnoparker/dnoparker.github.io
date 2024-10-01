@@ -1,0 +1,24 @@
+{
+  "skinTones": [
+    {
+      "name": "PEARL",
+      "hex": "#DEBA9D"
+    },
+    {
+      "name": "AILEY",
+      "hex": "#AE846C"
+    },
+    {
+      "name": "RAVEN",
+      "hex": "#967758"
+    },
+    {
+      "name": "BOJANGLES",
+      "hex": "#5E4F3F"
+    },
+    {
+      "name": "LOOOOL",
+      "hex": "#FF5800"
+    }
+  ]
+}

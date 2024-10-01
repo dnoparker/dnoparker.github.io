@@ -14,10 +14,6 @@ const tones = [
     {
       name: "BOJANGLES",
       hex: "#5E4F3F"
-    },
-    {
-      name: "LOOOOL",
-      hex: "#FF5800"
     }
   ];
 

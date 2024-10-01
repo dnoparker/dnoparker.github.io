@@ -123,10 +123,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleControlsButton = document.getElementById('toggle-controls');
   const controlsDiv = document.getElementById('controls');
 
-  toggleControlsButton.addEventListener('click', () => {
+  const toggleControls = () => {
     controlsDiv.classList.toggle('collapsed');
     toggleControlsButton.textContent = controlsDiv.classList.contains('collapsed') ? 'Show Controls' : 'Hide Controls';
-  });
+  };
+
+  toggleControlsButton.addEventListener('click', toggleControls);
+  toggleControlsButton.addEventListener('touchstart', toggleControls);
 
   // Variables to store the start and end positions of touch/mouse events
   let startX = 0;

@@ -242,3 +242,35 @@ body {
 #controls {
   pointer-events: auto;
 }
+
+#controls-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+
+#toggle-controls {
+  margin-bottom: 10px;
+}
+
+#controls {
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s;
+  overflow: hidden;
+}
+
+#controls.collapsed {
+  max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  padding: 0;
+}
+
+#controls:not(.collapsed) {
+  max-height: 500px; /* Adjust this value based on your content */
+  opacity: 1;
+  visibility: visible;
+}

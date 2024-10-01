@@ -118,7 +118,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Ensure addWedgeClickListener is called
   addWedgeClickListener();
-  console.log("DOMContentLoaded event completed"); // Debug log
+
+  // Add this new code for toggle functionality
+  const toggleControlsButton = document.getElementById('toggle-controls');
+  const controlsDiv = document.getElementById('controls');
+
+  toggleControlsButton.addEventListener('click', () => {
+    controlsDiv.classList.toggle('collapsed');
+    toggleControlsButton.textContent = controlsDiv.classList.contains('collapsed') ? 'Show Controls' : 'Hide Controls';
+  });
+
+  // Variables to store the start and end positions of touch/mouse events
+  let startX = 0;
+  let endX = 0;
+
+  // Touch event handlers
+  const handleTouchStart = (event) => {
+    startX = event.changedTouches[0].screenX;
+  };
+
+  const handleTouchEnd = (event) => {
+    endX = event.changedTouches[0].screenX;
+    handleSwipeGesture();
+  };
+
+  // Mouse event handlers
+  const handleMouseDown = (event) => {
+    startX = event.screenX;
+  };
+
+  const handleMouseUp = (event) => {
+    endX = event.screenX;
+    handleSwipeGesture();
+  };
+
+  // Function to handle swipe gestures
+  const handleSwipeGesture = () => {
+    if (endX < startX) {
+      // Swipe left
+      selectNextWedge();
+    }
+    if (endX > startX) {
+      // Swipe right
+      selectPreviousWedge();
+    }
+  };
+
+  // Function to select the next wedge
+  const selectNextWedge = () => {
+    if (wedgeChart) {
+      const currentIndex = wedgeChart.slices.findIndex(slice => slice.userData.selected);
+      const nextIndex = (currentIndex + 1) % wedgeChart.slices.length;
+      wedgeChart.animateSlicesToNewDistribution(nextIndex);
+    }
+  };
+
+  // Function to select the previous wedge
+  const selectPreviousWedge = () => {
+    if (wedgeChart) {
+      const currentIndex = wedgeChart.slices.findIndex(slice => slice.userData.selected);
+      const previousIndex = (currentIndex - 1 + wedgeChart.slices.length) % wedgeChart.slices.length;
+      wedgeChart.animateSlicesToNewDistribution(previousIndex);
+    }
+  };
+
+  // Add event listeners for touch events
+  document.getElementById('container').addEventListener('touchstart', handleTouchStart, false);
+  document.getElementById('container').addEventListener('touchend', handleTouchEnd, false);
+
+  // Add event listeners for mouse events
+  document.getElementById('container').addEventListener('mousedown', handleMouseDown, false);
+  document.getElementById('container').addEventListener('mouseup', handleMouseUp, false);
 });
 
 
@@ -249,8 +319,6 @@ const getSampleFaceColors = async () => {
       totalG += g;
       totalB += b;
       count++;
-    } else {
-      console.warn(`Anchor ${index} is out of canvas bounds.`);
     }
   });
 
@@ -262,9 +330,6 @@ const getSampleFaceColors = async () => {
     const averageHex = rgbToHex(avgR, avgG, avgB);
 
     updateAverageColorCircle(averageHex);
-    console.log(`Average Color: ${averageHex}`);
-  } else {
-    console.log('No valid colors were sampled.');
   }
 };
 
@@ -387,25 +452,12 @@ const updateAverageColorCircle = (color) => {
 
 // Add this new function near the other event handlers
 const handleWedgeClick = (event) => {
-  console.log("handleWedgeClick called"); // Debug log
   if (wedgeChart) {
-    console.log("Calling wedgeChart.onMouseClick"); // Debug log
     wedgeChart.onMouseClick(event);
-  } else {
-    console.log("wedgeChart is not initialized"); // Debug log
   }
 };
 
 // Add this new function near the other event handlers
 const addWedgeClickListener = () => {
-  console.log("Adding wedge click listener"); // Debug log
   renderer.domElement.addEventListener('click', handleWedgeClick);
 };
-
-// Add a global click listener for debugging
-document.addEventListener('click', (event) => {
-  console.log('Document clicked at:', event.clientX, event.clientY);
-  console.log('Event target:', event.target);
-  // Ensure pointer events are enabled
-  event.target.style.pointerEvents = 'auto';
-});

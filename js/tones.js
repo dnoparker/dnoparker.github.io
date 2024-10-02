@@ -14,7 +14,7 @@ const tones = [
     {
       name: "BOJANGLES",
       hex: "#5E4F3F"
-    },
+    }
   ];
 
 function createToneCircles() {

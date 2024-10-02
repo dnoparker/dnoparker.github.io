@@ -14,7 +14,7 @@ export class WedgeChart extends FaceObject {
         // Hard-set values
         this.scale = 0.65;
         this.gapSize = 0.02;
-        this.cornerRadius = 0.05;
+        this.cornerRadius = 0.065;
         this.minOuterRadius = 0.8;
         this.maxOuterRadius = 1.1;
         this.sliceCount = tones.length; // Use the number of tones instead of a fixed value
@@ -36,8 +36,14 @@ export class WedgeChart extends FaceObject {
         this.onMouseClick = this.onClick.bind(this);
         this.animate = this.animate.bind(this);
 
+        // Add a new property to track the animation state
+        this.isAnimatingOut = false;
+
         // Initialize slices with the hard-set slice count
         this.initializeSlices(this.sliceCount);
+
+        // Animate slices on initialization
+        this.animateWedgesIn();
 
         // Start animation
         this.animate();
@@ -68,11 +74,14 @@ export class WedgeChart extends FaceObject {
         const toneCount = tones.length;
         this.sliceValues = Array(toneCount).fill(100 / toneCount); // Set slice values based on the number of tones
         this.colors = tones.map(tone => tone.hex); // Use colors from tones
-        this.currentHeights = Array(toneCount).fill(parseFloat(this.minOuterRadius));
+        this.currentHeights = Array(toneCount).fill(0.5); // Start with height 0
         this.createSliceGeometries();
         this.updatePieChart();
-    }
 
+        // Select a random slice
+        const randomIndex = Math.floor(Math.random() * toneCount);
+        this.slices[randomIndex].userData.selected = true;
+    }
 
     createSliceGeometries() {
         console.log("createSliceGeometries");
@@ -328,5 +337,51 @@ export class WedgeChart extends FaceObject {
             const previousIndex = (selectedIndex - 1 + this.slices.length) % this.slices.length;
             this.animateSlicesToNewDistribution(previousIndex);
         }
+    }
+
+    // Add this new method to animate the wedges out
+    animateWedgesOut() {
+        if (this.isAnimatingOut) return;
+        this.isAnimatingOut = true;
+    
+        new TWEEN.Tween({ heights: this.currentHeights, opacity: 1 })
+            .to({ heights: Array(this.sliceCount).fill(0.5), opacity: 0 }, 1000)
+            .easing(TWEEN.Easing.Quadratic.In)
+            .onUpdate(({ heights, opacity }) => {
+                this.currentHeights = heights.map(height => parseFloat(height.toFixed(3)));
+                this.slices.forEach(slice => {
+                    slice.material.opacity = opacity;
+                    slice.material.transparent = true;
+                });
+                this.updatePieChart();
+            })
+            .onComplete(() => {
+                this.isAnimatingOut = false;
+            })
+            .start();
+    }
+    
+    animateWedgesIn() {
+        if (this.isAnimatingOut) return;
+    
+        const selectedIndex = this.slices.findIndex(slice => slice.userData.selected);
+        const targetHeights = this.calculateTargetHeights(
+            selectedIndex,
+            this.minOuterRadius,
+            this.maxOuterRadius
+        );
+    
+        new TWEEN.Tween({ heights: this.currentHeights, opacity: 0 })
+            .to({ heights: targetHeights, opacity: 1 }, 1000)
+            .easing(TWEEN.Easing.Elastic.Out)
+            .onUpdate(({ heights, opacity }) => {
+                this.currentHeights = heights.map(height => parseFloat(height.toFixed(3)));
+                this.slices.forEach(slice => {
+                    slice.material.opacity = opacity;
+                    slice.material.transparent = true;
+                });
+                this.updatePieChart();
+            })
+            .start();
     }
 }

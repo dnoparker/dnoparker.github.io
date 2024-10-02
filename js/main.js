@@ -3,6 +3,7 @@ import { MindARThree } from 'mindar-face-three';
 import { createToneCircles, highlightAISuggestedTone } from './tones.js';
 import { WedgeChart } from './wedge.js'; // Import the WedgeChart class
 import { FaceObject } from './faceObject.js'; // Import the base FaceObject class
+import { tones } from './tones.js';
 
 
 // -------------------------
@@ -20,8 +21,6 @@ const videoElement = document.getElementById('webcam');
 const container = document.getElementById('container');
 const sendToAIButton = document.getElementById('send-to-ai');
 const getAverageColorsButton = document.getElementById('get-average-colors');
-const toggleControlsButton = document.getElementById('toggle-controls');
-const controlsDiv = document.getElementById('controls');
 const loadingAnimation = document.getElementById('loading-animation');
 const averageColorCircle = document.getElementById('average-color-circle');
 
@@ -157,8 +156,11 @@ function setupFacialAnchors() {
     // anchor.group.add(cube);
   }
 
-  // Example of adding a custom face object
-  addFaceObject('wedge', 19);
+  // wait for 5 seconds
+  setTimeout(() => {
+    // Example of adding a custom face object
+    addFaceObject('wedge', 19);
+  }, 5000);
 }
 
 /**
@@ -177,6 +179,16 @@ function setCameraPosition() {
  */
 const showLoading = () => {
   loadingAnimation.classList.remove('loading-hidden');
+
+  // Check if the loading text already exists
+  let loadingText = document.querySelector('.loading-text');
+  if (!loadingText) {
+    // Create and append the text element if it doesn't exist
+    loadingText = document.createElement('div');
+    loadingText.innerText = 'Analysing Face';
+    loadingText.className = 'loading-text'; // Optional: Add a class for styling
+    loadingAnimation.appendChild(loadingText);
+  }
 };
 
 /**
@@ -265,6 +277,14 @@ const handleSendToAI = async () => {
   sendToAIButton.classList.add('button-disabled');
 
   showLoading();
+
+  // Animate wedges out
+  faceObjects.forEach(obj => {
+    if (obj instanceof WedgeChart) {
+      obj.animateWedgesOut();
+    }
+  });
+
   try {
     await captureScreenshot();
     // The API call and text display are handled within captureScreenshot
@@ -276,6 +296,35 @@ const handleSendToAI = async () => {
   } catch (error) {
     console.error('Error processing AI request:', error);
     displayText('Error processing AI request');
+  } 
+};
+
+// -------------------------
+// DEBUG: Wedge Animation Toggle
+// Remove this section for production
+// -------------------------
+
+let isWedgesVisible = true; // Track the current state of wedges
+
+// Toggle wedge animation
+const toggleWedgeAnimation = () => {
+  isWedgesVisible = !isWedgesVisible;
+  faceObjects.forEach(obj => {
+    if (obj instanceof WedgeChart) {
+      if (isWedgesVisible) {
+        obj.animateWedgesIn();
+      } else {
+        obj.animateWedgesOut();
+      }
+    }
+  });
+};
+
+// Handle keydown events for debug toggle
+const handleKeyDown = (event) => {
+  if (event.code === 'Space') {
+    event.preventDefault(); // Prevent default space bar behavior
+    toggleWedgeAnimation();
   }
 };
 
@@ -298,6 +347,9 @@ function setupEventListeners() {
   container.addEventListener('mousedown', handleMouseDown, false);
   container.addEventListener('mousemove', handleMouseMove, false);
   container.addEventListener('mouseup', handleMouseUp, false);
+
+  // DEBUG: Add keyboard event listener for animation toggle
+  document.addEventListener('keydown', handleKeyDown);
 }
 
 // -------------------------
@@ -491,42 +543,65 @@ const displayText = (text) => {
  */
 const displayTextWithImage = (text, imageUrl) => {
   hideLoading();
-  // Remove any existing text overlays
   const existingTexts = document.querySelectorAll('.displayed-text');
   existingTexts.forEach(element => element.remove());
 
-  // Create the text container
+  const suggestedToneName = extractToneName(text);
+  const suggestedTone = tones.find(tone => tone.name.toUpperCase() === suggestedToneName.toUpperCase());
+  const colorHex = suggestedTone ? suggestedTone.hex : '#FFFFFF';
+
   const textContainer = document.createElement('div');
   textContainer.className = 'displayed-text';
 
-  // Create the image element
+  const imageContainer = document.createElement('div');
+  imageContainer.className = 'image-container';
+
   const img = document.createElement('img');
   img.src = imageUrl;
   img.className = 'captured-image';
-  textContainer.appendChild(img);
+  imageContainer.appendChild(img);
 
-  // Create the text element
+  const colorLine = document.createElement('div');
+  colorLine.className = 'color-line';
+  colorLine.style.backgroundColor = colorHex;
+  imageContainer.appendChild(colorLine);
+
+  textContainer.appendChild(imageContainer);
+
   const textElement = document.createElement('p');
   textElement.innerText = text;
   textContainer.appendChild(textElement);
 
-  // Create the dismiss button
   const dismissBtn = document.createElement('span');
-  dismissBtn.innerText = ' X';
+  dismissBtn.innerText = '×';
   dismissBtn.className = 'dismiss-btn';
   dismissBtn.onclick = () => {
-    textContainer.remove();
-    // Re-enable the "Send to AI" button and restore its appearance
-    sendToAIButton.disabled = false;
-    sendToAIButton.classList.remove('button-disabled');
+      textContainer.remove();
+      const sendToAIButton = document.getElementById('send-to-ai');
+      if (sendToAIButton) {
+          sendToAIButton.disabled = false;
+          sendToAIButton.classList.remove('button-disabled');
+      }
+
+          // Animate wedges back in
+    faceObjects.forEach(obj => {
+      if (obj instanceof WedgeChart) {
+        obj.animateWedgesIn();
+      }
+    });
   };
   textContainer.appendChild(dismissBtn);
 
-  // Append to the body
   document.body.appendChild(textContainer);
 
-  // Check and log the tone
+  highlightAISuggestedTone(suggestedToneName);
   checkAndLogTone(text);
+};
+
+// Helper function to extract the tone name from the AI's response
+const extractToneName = (text) => {
+  const match = text.match(/resembles:\s*(\w+)/i);
+  return match ? match[1].trim() : '';
 };
 
 /**

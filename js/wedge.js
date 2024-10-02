@@ -12,15 +12,19 @@ export class WedgeChart extends FaceObject {
         super(scene, camera, renderer);
 
         // Hard-set values
-        this.scale = 0.65;
+        this.scale = 0.75;
         this.gapSize = 0.02;
         this.cornerRadius = 0.065;
         this.minOuterRadius = 0.8;
         this.maxOuterRadius = 1.1;
         this.sliceCount = tones.length; // Use the number of tones instead of a fixed value
 
-        // Rotate the group to correct the orientation
-        this.group.rotation.z = Math.PI; // Rotate 180 degrees around the Z axis
+        // Initialize rotation
+        this.rotationZ = 3.841592638331002;
+        this.group.rotation.z = this.rotationZ;
+
+        // Bind the new scroll method
+        this.onScroll = this.onScroll.bind(this);
 
         // Initialize properties specific to WedgeChart
         this.slices = [];
@@ -290,9 +294,28 @@ export class WedgeChart extends FaceObject {
     }
 
     setupEventListeners() {
-        // Remove event listeners for controls
+        // Existing event listeners
         document.getElementById('container').addEventListener('click', this.onClick, false);
         console.log("Click event listener added to container");
+
+        // Add scroll event listener
+        window.addEventListener('wheel', this.onScroll, false);
+        console.log("Scroll event listener added to window");
+    }
+
+    onScroll(event) {
+        // Adjust rotation based on scroll
+        const scrollSensitivity = 0.001;
+        this.rotationZ += event.deltaY * scrollSensitivity;
+
+        // Allow rotation to go all the way round
+        this.rotationZ = this.rotationZ % (2 * Math.PI);
+
+        // Apply rotation
+        this.group.rotation.z = this.rotationZ;
+
+        // Log the rotation value
+        console.log("Rotation Z:", this.rotationZ);
     }
 
     debounce(func, wait) {

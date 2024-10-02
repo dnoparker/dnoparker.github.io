@@ -159,7 +159,7 @@ function setupFacialAnchors() {
   // wait for 5 seconds
   setTimeout(() => {
     // Example of adding a custom face object
-    addFaceObject('wedge', 19);
+    addFaceObject('wedge', 200);
   }, 5000);
 }
 
@@ -371,9 +371,45 @@ const startAR = async () => {
 // Screenshot and API Interaction
 // -------------------------
 
-/**
- * Captures a screenshot from the video and Three.js renderer.
- */
+// Add this new function for white balancing with increased intensity
+const whiteBalance = (imageData, percentile = 5) => {
+  const channels = [
+    new Uint8Array(imageData.width * imageData.height),
+    new Uint8Array(imageData.width * imageData.height),
+    new Uint8Array(imageData.width * imageData.height)
+  ];
+
+  // Separate channels
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    channels[0][i / 4] = imageData.data[i];     // R
+    channels[1][i / 4] = imageData.data[i + 1]; // G
+    channels[2][i / 4] = imageData.data[i + 2]; // B
+  }
+
+  // White balance each channel with increased intensity and brightness
+  for (let c = 0; c < 3; c++) {
+    const sorted = channels[c].slice().sort((a, b) => a - b);
+    const low = sorted[Math.floor(sorted.length * percentile / 100)];
+    const high = sorted[Math.floor(sorted.length * (100 - percentile) / 100)];
+
+    // Apply a more aggressive white balance by stretching the range and increasing brightness
+    const factor = 1; // Increase intensity factor
+    const brightnessAdjustment = 0; // Brightness adjustment value
+    for (let i = 0; i < channels[c].length; i++) {
+      channels[c][i] = Math.min(255, Math.max(0, Math.round((channels[c][i] - low) * factor * 255 / (high - low) + brightnessAdjustment)));
+    }
+  }
+
+  // Recombine channels
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    imageData.data[i] = channels[0][i / 4];     // R
+    imageData.data[i + 1] = channels[1][i / 4]; // G
+    imageData.data[i + 2] = channels[2][i / 4]; // B
+  }
+
+  return imageData;
+};
+
 const captureScreenshot = async () => {
   // Create an offscreen canvas
   const offscreenCanvas = document.createElement('canvas');
@@ -394,6 +430,11 @@ const captureScreenshot = async () => {
   const rendererImage = new Image();
   rendererImage.src = renderer.domElement.toDataURL('image/png');
   rendererImage.onload = async () => {
+    // Apply white balance
+    const imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    const whiteBalancedImageData = whiteBalance(imageData);
+    ctx.putImageData(whiteBalancedImageData, 0, 0);
+
     // Get the final image data
     const base64Image = offscreenCanvas.toDataURL('image/png').split(',')[1];
 
@@ -412,6 +453,10 @@ const captureScreenshot = async () => {
 
     if (responseText) {
       displayTextWithImage(responseText, `data:image/png;base64,${base64Image}`);
+
+      //save image to file
+      saveImage(base64Image);
+
     } else {
       displayTextWithImage('No response from Vision API', `data:image/png;base64,${base64Image}`);
     }

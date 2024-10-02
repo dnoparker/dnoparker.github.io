@@ -14,7 +14,7 @@ const tones = [
     {
       name: "BOJANGLES",
       hex: "#5E4F3F"
-    }
+    },
   ];
 
 function createToneCircles() {
@@ -53,6 +53,7 @@ function createToneCircles() {
 }
 
 function highlightAISuggestedTone(suggestedToneName) {
+  suggestedToneName = suggestedToneName.toUpperCase();
   document.querySelectorAll('.tone-circle-container').forEach(container => {
     const nameLabel = container.querySelector('.tone-name');
     const aiSuggestedLabel = container.querySelector('.ai-suggested-label');
@@ -60,9 +61,11 @@ function highlightAISuggestedTone(suggestedToneName) {
     if (nameLabel.textContent === suggestedToneName) {
       container.classList.add('ai-suggested');
       aiSuggestedLabel.style.display = 'block';
+      console.log('Highlighted tone: ' + suggestedToneName);
     } else {
       container.classList.remove('ai-suggested');
       aiSuggestedLabel.style.display = 'none';
+      console.log('Unhighlighted tone: ' + nameLabel.textContent);
     }
   });
 }

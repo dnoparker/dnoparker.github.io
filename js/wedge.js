@@ -11,13 +11,20 @@ export class WedgeChart extends FaceObject {
     constructor(scene, camera, renderer) {
         super(scene, camera, renderer);
 
+        // Hard-set values
+        this.scale = 0.65;
+        this.gapSize = 0.02;
+        this.cornerRadius = 0.05;
+        this.minOuterRadius = 0.8;
+        this.maxOuterRadius = 1.1;
+        this.sliceCount = tones.length; // Use the number of tones instead of a fixed value
+
         // Rotate the group to correct the orientation
         this.group.rotation.z = Math.PI; // Rotate 180 degrees around the Z axis
 
         // Initialize properties specific to WedgeChart
         this.slices = [];
         this.sliceValues = [];
-        this.colors = [];
         this.sliceGeometries = [];
         this.currentHeights = [];
 
@@ -25,24 +32,18 @@ export class WedgeChart extends FaceObject {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
 
-        // Color palette
-        this.colorPalette = [
-            0xff5733, 0xff8f33, 0xf0d9b5, 0xe0ac69, 0xc68642,
-            0x8d5524, 0x5a2b0d, 0x33ff57, 0x3357ff, 0xff33a8,
-            0xa833ff, 0x33fff5, 0x8fff33, 0x338fff, 0xff3333,
-            0x33ffcb, 0xcb33ff, 0xffcb33, 0x33cbff, 0xff33cb,
-            0x66ff33, 0x3366ff, 0xff3366, 0x33ff66, 0x6633ff
-        ];
-
         // Bind methods
         this.onMouseClick = this.onClick.bind(this);
         this.animate = this.animate.bind(this);
 
-        // Initialize slices
-        this.initializeSlices(4);
+        // Initialize slices with the hard-set slice count
+        this.initializeSlices(this.sliceCount);
 
         // Start animation
         this.animate();
+
+        // scale group
+        this.group.scale.set(this.scale, this.scale, this.scale);
     }
 
     initialize() {
@@ -60,7 +61,6 @@ export class WedgeChart extends FaceObject {
         // Clear the arrays
         this.slices = [];
         this.sliceValues = [];
-        this.colors = [];
         this.sliceGeometries = [];
         this.currentHeights = [];
 
@@ -68,7 +68,7 @@ export class WedgeChart extends FaceObject {
         const toneCount = tones.length;
         this.sliceValues = Array(toneCount).fill(100 / toneCount); // Set slice values based on the number of tones
         this.colors = tones.map(tone => tone.hex); // Use colors from tones
-        this.currentHeights = Array(toneCount).fill(parseFloat(document.getElementById('minOuterRadius').value));
+        this.currentHeights = Array(toneCount).fill(parseFloat(this.minOuterRadius));
         this.createSliceGeometries();
         this.updatePieChart();
     }
@@ -77,9 +77,9 @@ export class WedgeChart extends FaceObject {
     createSliceGeometries() {
         console.log("createSliceGeometries");
         const total = this.sliceValues.reduce((acc, val) => acc + val, 0);
-        const cornerRadiusFactor = parseFloat(document.getElementById('cornerRadius').value);
-        const minOuterRadius = parseFloat(document.getElementById('minOuterRadius').value);
-        const maxOuterRadius = parseFloat(document.getElementById('maxOuterRadius').value);
+        const cornerRadiusFactor = this.cornerRadius;
+        const minOuterRadius = this.minOuterRadius;
+        const maxOuterRadius = this.maxOuterRadius;
 
         let startAngle = 0;
 
@@ -103,8 +103,8 @@ export class WedgeChart extends FaceObject {
 
     updatePieChart() {
         const total = this.sliceValues.reduce((acc, val) => acc + val, 0);
-        const gapSize = parseFloat(document.getElementById('gapSize').value);
-        const cornerRadiusFactor = parseFloat(document.getElementById('cornerRadius').value);
+        const gapSize = this.gapSize;
+        const cornerRadiusFactor = this.cornerRadius;
 
         let startAngle = 0;
 
@@ -184,15 +184,6 @@ export class WedgeChart extends FaceObject {
         geometry.computeBoundingSphere();
     }
 
-    generateColors(count) {
-        const colors = [];
-        for (let i = 0; i < count; i++) {
-            // Cycle through the palette
-            colors.push(this.colorPalette[i % this.colorPalette.length]);
-        }
-        return colors;
-    }
-
     animateSlicesToNewDistribution(clickedIndex) {
         if (this.currentTween) {
             this.currentTween.stop();
@@ -201,8 +192,8 @@ export class WedgeChart extends FaceObject {
         const currentValues = [...this.sliceValues];
         const targetValues = this.calculateNewDistribution(clickedIndex);
 
-        const minOuterRadius = parseFloat(document.getElementById('minOuterRadius').value);
-        const maxOuterRadius = parseFloat(document.getElementById('maxOuterRadius').value);
+        const minOuterRadius = this.minOuterRadius;
+        const maxOuterRadius = this.maxOuterRadius;
         const targetHeights = this.calculateTargetHeights(clickedIndex, minOuterRadius, maxOuterRadius);
 
         this.currentTween = new TWEEN.Tween({ values: currentValues, heights: this.currentHeights })
@@ -290,24 +281,7 @@ export class WedgeChart extends FaceObject {
     }
 
     setupEventListeners() {
-        document.querySelectorAll('input[type="range"]').forEach(input => {
-            input.addEventListener('input', this.debounce(() => {
-                this.updatePieChart();
-                this.render();
-            }, 100));
-        });
-
-        document.getElementById('updateSlices').addEventListener('click', () => {
-            const count = parseInt(document.getElementById('sliceCount').value);
-            if (count >= 2 && count <= 20) {
-                this.initializeSlices(count);
-                this.render();
-            } else {
-                alert('Please enter a number between 2 and 20');
-            }
-        });
-
-        // Update the click event listener
+        // Remove event listeners for controls
         document.getElementById('container').addEventListener('click', this.onClick, false);
         console.log("Click event listener added to container");
     }

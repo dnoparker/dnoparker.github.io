@@ -1,225 +1,34 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-face-three';
-import { tones, createToneCircles, highlightAISuggestedTone } from './tones.js';
+import { createToneCircles, highlightAISuggestedTone } from './tones.js';
 import { WedgeChart } from './wedge.js'; // Import the WedgeChart class
 import { FaceObject } from './faceObject.js'; // Import the base FaceObject class
 
-// Add this near the top of your file, with other global variables
-const debug = true; // Set this to false when you want to use the real API
 
 // -------------------------
-// Initialization
+// Global Variables
 // -------------------------
 
-// Set up webcam video element
-const videoElement = document.getElementById('webcam');
+const debug = true; // Set to false to use the real API
 
-navigator.mediaDevices.getUserMedia({ video: true })
-  .then(stream => {
-    videoElement.srcObject = stream;
-  })
-  .catch(error => {
-    console.error('Error accessing webcam:', error);
-  });
-
-
-// Initialize MindAR with Three.js
-const mindAR = new MindARThree({
-  container: document.querySelector("#container"),
-});
-
-
-const { renderer, scene, camera } = mindAR;
-
-// Initialize an array to hold all face objects
+let mindAR, renderer, scene, camera;
 const faceObjects = [];
-
-// Array to hold all facial anchors
 const facialAnchors = [];
 
-// Create anchors and attach objects to each facial landmark
-for (let index = 0; index < 468; index++) {
-  const anchor = mindAR.addAnchor(index);
-  facialAnchors.push(anchor);
+// DOM Elements
+const videoElement = document.getElementById('webcam');
+const container = document.getElementById('container');
+const sendToAIButton = document.getElementById('send-to-ai');
+const getAverageColorsButton = document.getElementById('get-average-colors');
+const toggleControlsButton = document.getElementById('toggle-controls');
+const controlsDiv = document.getElementById('controls');
+const loadingAnimation = document.getElementById('loading-animation');
+const averageColorCircle = document.getElementById('average-color-circle');
 
-  if (index === 19) {
-    // Initialize WedgeChart and attach it to anchor 19
-    const wedgeChart = new WedgeChart(scene, camera, renderer);
-    wedgeChart.setupEventListeners();
-    anchor.group.add(wedgeChart.group);
-    faceObjects.push(wedgeChart); // Add to faceObjects array
-    console.log("WedgeChart initialized and added to anchor 19");
-  } else {
-    const cubeGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-    const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-    anchor.group.add(cube);
-  }
-}
-
-
-// Set the camera position
-camera.position.z = 5;
-
-// -------------------------
-// Event Handlers
-// -------------------------
-
-/**
- * Handles the click event on the "send to AI" button.
- * Captures a screenshot and processes it.
- * @param {Event} event - The click event
- */
-const showLoading = () => {
-  document.getElementById('loading-animation').classList.remove('loading-hidden');
-};
-
-
-const hideLoading = () => {
-  document.getElementById('loading-animation').classList.add('loading-hidden');
-};
-
-
-/**
- * Handles the click event on the "get average colors" button.
- * @param {Event} event - The click event
- */
-const handleGetAverageColors = (event) => {
-  getSampleFaceColors();
-};
-
-
-// -------------------------
-// Event Listeners
-// -------------------------
-
-// Handle get average colors button click
-document.getElementById('get-average-colors').addEventListener('click', handleGetAverageColors);
-
-document.addEventListener('DOMContentLoaded', () => {
-  const sendToAIButton = document.getElementById('send-to-ai');
-
-  // Remove the 'disabled' attribute from the button in HTML
-  sendToAIButton.removeAttribute('disabled');
-
-  sendToAIButton.addEventListener('click', async () => {
-    // Disable the button and change its appearance
-    sendToAIButton.disabled = true;
-    sendToAIButton.classList.add('button-disabled');
-
-    showLoading();
-    try {
-      await captureScreenshot();
-      // The API call and text display will be handled in the captureScreenshot function
-
-      // Simulating AI processing time with a timeout
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      console.log('AI response received and processed');
-    } catch (error) {
-      console.error('Error processing AI request:', error);
-      displayText('Error processing AI request');
-    }
-  });
-
-
-  createToneCircles();
-
-  // Ensure addWedgeClickListener is called
-  // addWedgeClickListener();
-
-  // Add this new code for toggle functionality
-  const toggleControlsButton = document.getElementById('toggle-controls');
-  const controlsDiv = document.getElementById('controls');
-
-  const toggleControls = () => {
-    controlsDiv.classList.toggle('collapsed');
-    toggleControlsButton.textContent = controlsDiv.classList.contains('collapsed') ? 'Show Controls' : 'Hide Controls';
-  };
-
-
-  toggleControlsButton.addEventListener('click', toggleControls);
-  toggleControlsButton.addEventListener('touchstart', toggleControls);
-
-  // Variables to store the start and end positions of touch/mouse events
-  let startX = 0;
-  let endX = 0;
-
-  // Minimum distance for a swipe to be considered valid
-  const minSwipeDistance = 30;
-
-  // Touch event handlers
-  const handleTouchStart = (event) => {
-    startX = event.touches[0].clientX;
-  };
-
-
-  const handleTouchMove = (event) => {
-    endX = event.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    handleSwipeGesture();
-  };
-
-
-  // Mouse event handlers
-  const handleMouseDown = (event) => {
-    startX = event.clientX;
-  };
-
-  const handleMouseMove = (event) => {
-    endX = event.clientX;
-  };
-
-  const handleMouseUp = () => {
-    handleSwipeGesture();
-  };
-
-
-  // Function to handle swipe gestures
-  const handleSwipeGesture = () => {
-    const distance = endX - startX;
-    if (Math.abs(distance) > minSwipeDistance) {
-      if (distance < 0) {
-        // Swipe left
-        faceObjects.forEach(obj => obj.swipeLeft());
-      } else {
-        // Swipe right
-        faceObjects.forEach(obj => obj.swipeRight());
-      }
-    }
-  };
-
-
-  // Add event listeners for touch events
-  const container = document.getElementById('container');
-  container.addEventListener('touchstart', handleTouchStart, false);
-  container.addEventListener('touchmove', handleTouchMove, false);
-  container.addEventListener('touchend', handleTouchEnd, false);
-
-  // Add event listeners for mouse events
-  container.addEventListener('mousedown', handleMouseDown, false);
-  container.addEventListener('mousemove', handleMouseMove, false);
-  container.addEventListener('mouseup', handleMouseUp, false);
-});
-
-
-// -------------------------
-// Render Loop
-// -------------------------
-
-// Start the MindAR session and begin rendering
-const startAR = async () => {
-  await mindAR.start();
-  renderer.setAnimationLoop(() => {
-    renderer.render(scene, camera);
-    faceObjects.forEach(obj => obj.update());
-  });
-};
-
-
-startAR();
+// Touch and Mouse Event Variables
+let startX = 0;
+let endX = 0;
+const minSwipeDistance = 30;
 
 // -------------------------
 // Utility Functions
@@ -236,6 +45,279 @@ const rgbToHex = (r, g, b) => {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
+/**
+ * Gets screen position of a 3D object.
+ * @param {THREE.Object3D} object - The 3D object.
+ * @param {THREE.Camera} camera - The camera.
+ * @returns {Object} x and y coordinates on the screen.
+ */
+const getScreenPosition = (object, camera) => {
+  const vector = new THREE.Vector3();
+  object.getWorldPosition(vector);
+  vector.project(camera);
+  const canvas = renderer.domElement;
+  const x = (vector.x + 1) / 2 * canvas.width;
+  const y = (-vector.y + 1) / 2 * canvas.height;
+  return { x: Math.floor(x), y: Math.floor(y) };
+};
+
+/**
+ * Loads an image and converts it to Base64.
+ * @param {string} imagePath - Path to the image.
+ * @returns {Promise<string>} Base64 encoded image.
+ */
+const loadImageAsBase64 = async (imagePath) => {
+  const response = await fetch(imagePath);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+// -------------------------
+// Face Object Creation
+// -------------------------
+
+/**
+ * Creates a FaceObject based on the specified type.
+ * @param {string} type - Type of the face object.
+ * @param {THREE.Scene} scene - The THREE.js scene.
+ * @param {THREE.Camera} camera - The camera.
+ * @param {THREE.Renderer} renderer - The renderer.
+ * @returns {FaceObject} An instance of FaceObject or its subclass.
+ */
+function createFaceObject(type, scene, camera, renderer) {
+  switch (type) {
+    case 'wedge':
+      return new WedgeChart(scene, camera, renderer);
+    // Add other cases for different face object types here
+    default:
+      return new FaceObject(scene, camera, renderer);
+  }
+}
+
+/**
+ * Adds a FaceObject to a specific anchor.
+ * @param {string} type - Type of the face object.
+ * @param {number} anchorIndex - Index of the facial anchor.
+ * @returns {FaceObject} The created face object.
+ */
+function addFaceObject(type, anchorIndex) {
+  const newObject = createFaceObject(type, scene, camera, renderer);
+  newObject.setupEventListeners();
+  facialAnchors[anchorIndex].group.add(newObject.group);
+  faceObjects.push(newObject);
+  return newObject;
+}
+
+// -------------------------
+// Initialization
+// -------------------------
+
+/**
+ * Initializes the webcam video stream.
+ */
+function initializeWebcam() {
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      videoElement.srcObject = stream;
+    })
+    .catch(error => {
+      console.error('Error accessing webcam:', error);
+    });
+}
+
+/**
+ * Initializes MindAR with Three.js.
+ */
+function initializeMindAR() {
+  mindAR = new MindARThree({
+    container: container,
+  });
+
+  renderer = mindAR.renderer;
+  scene = mindAR.scene;
+  camera = mindAR.camera;
+}
+
+/**
+ * Sets up facial anchors and attaches basic cubes for debugging.
+ */
+function setupFacialAnchors() {
+  for (let index = 0; index < 468; index++) {
+    const anchor = mindAR.addAnchor(index);
+    facialAnchors.push(anchor);
+
+    // const cubeGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+    // const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    // const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    // anchor.group.add(cube);
+  }
+
+  // Example of adding a custom face object
+  addFaceObject('wedge', 19);
+}
+
+/**
+ * Sets the initial camera position.
+ */
+function setCameraPosition() {
+  camera.position.z = 5;
+}
+
+// -------------------------
+// Event Handlers
+// -------------------------
+
+/**
+ * Displays the loading animation.
+ */
+const showLoading = () => {
+  loadingAnimation.classList.remove('loading-hidden');
+};
+
+/**
+ * Hides the loading animation.
+ */
+const hideLoading = () => {
+  loadingAnimation.classList.add('loading-hidden');
+};
+
+/**
+ * Handles the click event for getting average colors.
+ * @param {Event} event - The click event.
+ */
+const handleGetAverageColors = (event) => {
+  getSampleFaceColors();
+};
+
+/**
+ * Handles the swipe gestures based on distance and direction.
+ */
+const handleSwipeGesture = () => {
+  const distance = endX - startX;
+  if (Math.abs(distance) > minSwipeDistance) {
+    if (distance < 0) {
+      // Swipe left
+      faceObjects.forEach(obj => obj.swipeLeft());
+    } else {
+      // Swipe right
+      faceObjects.forEach(obj => obj.swipeRight());
+    }
+  }
+};
+
+/**
+ * Handles touch start event.
+ * @param {TouchEvent} event 
+ */
+const handleTouchStart = (event) => {
+  startX = event.touches[0].clientX;
+};
+
+/**
+ * Handles touch move event.
+ * @param {TouchEvent} event 
+ */
+const handleTouchMove = (event) => {
+  endX = event.touches[0].clientX;
+};
+
+/**
+ * Handles touch end event.
+ */
+const handleTouchEnd = () => {
+  handleSwipeGesture();
+};
+
+/**
+ * Handles mouse down event.
+ * @param {MouseEvent} event 
+ */
+const handleMouseDown = (event) => {
+  startX = event.clientX;
+};
+
+/**
+ * Handles mouse move event.
+ * @param {MouseEvent} event 
+ */
+const handleMouseMove = (event) => {
+  endX = event.clientX;
+};
+
+/**
+ * Handles mouse up event.
+ */
+const handleMouseUp = () => {
+  handleSwipeGesture();
+};
+
+/**
+ * Handles the click event for the "Send to AI" button.
+ */
+const handleSendToAI = async () => {
+  // Disable the button and change its appearance
+  sendToAIButton.disabled = true;
+  sendToAIButton.classList.add('button-disabled');
+
+  showLoading();
+  try {
+    await captureScreenshot();
+    // The API call and text display are handled within captureScreenshot
+
+    // Simulate AI processing time
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    console.log('AI response received and processed');
+  } catch (error) {
+    console.error('Error processing AI request:', error);
+    displayText('Error processing AI request');
+  }
+};
+
+// -------------------------
+// Event Listeners Setup
+// -------------------------
+
+function setupEventListeners() {
+  // Button Event Listeners
+  getAverageColorsButton.addEventListener('click', handleGetAverageColors);
+  sendToAIButton.removeAttribute('disabled');
+  sendToAIButton.addEventListener('click', handleSendToAI);
+
+  // Touch Event Listeners for Swipe Gestures
+  container.addEventListener('touchstart', handleTouchStart, false);
+  container.addEventListener('touchmove', handleTouchMove, false);
+  container.addEventListener('touchend', handleTouchEnd, false);
+
+  // Mouse Event Listeners for Swipe Gestures
+  container.addEventListener('mousedown', handleMouseDown, false);
+  container.addEventListener('mousemove', handleMouseMove, false);
+  container.addEventListener('mouseup', handleMouseUp, false);
+}
+
+// -------------------------
+// Rendering Loop
+// -------------------------
+
+/**
+ * Starts the AR session and begins the render loop.
+ */
+const startAR = async () => {
+  await mindAR.start();
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+    faceObjects.forEach(obj => obj.update());
+  });
+};
+
+// -------------------------
+// Screenshot and API Interaction
+// -------------------------
 
 /**
  * Captures a screenshot from the video and Three.js renderer.
@@ -265,7 +347,7 @@ const captureScreenshot = async () => {
 
     let responseText;
     if (debug) {
-      // Use lorem ipsum text in debug mode
+      // Use placeholder text in debug mode
       responseText = "Based on the image swatch provided, this person's skin tone mostly closely resembles: Raven";
       await new Promise(resolve => setTimeout(resolve, 3000));
     } else {
@@ -283,7 +365,6 @@ const captureScreenshot = async () => {
     }
   };
 };
-
 
 /**
  * Gets sample face colors from the captured image.
@@ -308,7 +389,7 @@ const getSampleFaceColors = async () => {
 
   let totalR = 0, totalG = 0, totalB = 0, count = 0;
 
-  facialAnchors.forEach((anchor, index) => {
+  facialAnchors.forEach((anchor) => {
     const { x, y } = getScreenPosition(anchor.group, camera);
 
     if (x >= 0 && x < offscreenCanvas.width && y >= 0 && y < offscreenCanvas.height) {
@@ -333,7 +414,6 @@ const getSampleFaceColors = async () => {
     }
   });
 
-
   if (count > 0) {
     // Calculate and set the average color for the circle
     const avgR = Math.round(totalR / count);
@@ -344,24 +424,6 @@ const getSampleFaceColors = async () => {
     updateAverageColorCircle(averageHex);
   }
 };
-
-
-/**
- * Get screen position of a 3D object.
- * @param {THREE.Object3D} object - The 3D object.
- * @param {THREE.Camera} camera - The camera.
- * @returns {Object} x and y coordinates on the screen.
- */
-const getScreenPosition = (object, camera) => {
-  const vector = new THREE.Vector3();
-  object.getWorldPosition(vector);
-  vector.project(camera);
-  const canvas = renderer.domElement;
-  const x = (vector.x + 1) / 2 * canvas.width;
-  const y = (-vector.y + 1) / 2 * canvas.height;
-  return { x: Math.floor(x), y: Math.floor(y) };
-};
-
 
 /**
  * Sends two Base64 encoded images to the Vision API.
@@ -379,7 +441,6 @@ const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
       body: JSON.stringify({ base64Image1, base64Image2 })
     });
 
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -391,7 +452,6 @@ const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
     return null;
   }
 };
-
 
 /**
  * Displays a text overlay on the screen with the provided content.
@@ -415,7 +475,6 @@ const displayText = (text) => {
   dismissBtn.onclick = () => {
     textContainer.remove();
     // Re-enable the "Send to AI" button and restore its appearance
-    const sendToAIButton = document.getElementById('send-to-ai');
     sendToAIButton.disabled = false;
     sendToAIButton.classList.remove('button-disabled');
   };
@@ -424,7 +483,6 @@ const displayText = (text) => {
   // Append to the body
   document.body.appendChild(textContainer);
 };
-
 
 /**
  * Displays a text overlay with an image on the screen.
@@ -459,7 +517,6 @@ const displayTextWithImage = (text, imageUrl) => {
   dismissBtn.onclick = () => {
     textContainer.remove();
     // Re-enable the "Send to AI" button and restore its appearance
-    const sendToAIButton = document.getElementById('send-to-ai');
     sendToAIButton.disabled = false;
     sendToAIButton.classList.remove('button-disabled');
   };
@@ -472,26 +529,37 @@ const displayTextWithImage = (text, imageUrl) => {
   checkAndLogTone(text);
 };
 
-
-// Update the average color circle
+/**
+ * Updates the average color circle's background color.
+ * @param {string} color - Hex color code
+ */
 const updateAverageColorCircle = (color) => {
-  const circle = document.getElementById('average-color-circle');
-  circle.style.backgroundColor = color;
+  averageColorCircle.style.backgroundColor = color;
 };
 
+/**
+ * Checks the AI response text and logs the corresponding tone.
+ * @param {string} text - The AI response text
+ */
+const checkAndLogTone = (text) => {
+  // Implement tone checking logic here if necessary
+  // Example:
+  if (text.includes('Raven')) {
+    highlightAISuggestedTone('Raven');
+    console.log('Raven');
+  }
+};
 
-// Add this new function near the other event handlers
-// const handleWedgeClick = (event) => {
-//   if (faceObjects.length > 0) {
-//     faceObjects.forEach(obj => {
-//       if (obj instanceof WedgeChart) {
-//         obj.onMouseClick(event);
-//       }
-//     });
-//   }
-// };
+// -------------------------
+// DOM Content Loaded
+// -------------------------
 
-// Add this new function near the other event handlers
-// const addWedgeClickListener = () => {
-//   renderer.domElement.addEventListener('click', handleWedgeClick);
-// };
+document.addEventListener('DOMContentLoaded', () => {
+  initializeWebcam();
+  initializeMindAR();
+  setupFacialAnchors();
+  setCameraPosition();
+  setupEventListeners();
+  createToneCircles();
+  startAR();
+});

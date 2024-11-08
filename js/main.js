@@ -1,20 +1,25 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-face-three';
-import { createToneCircles, highlightAISuggestedTone } from './tones.js';
+import { createToneCircles, highlightAISuggestedTone, getCurrentTone, updateUISelection, tones } from './tones.js';
 import { WedgeChart } from './wedge.js'; // Import the WedgeChart class
 import { FaceObject } from './faceObject.js'; // Import the base FaceObject class
-import { tones } from './tones.js';
+import { FaceDots } from './faceDots.js';
+import { DisplayMode } from './displayMode.js';
+import { storeToneChoices } from './firebase.js';
 
 
 // -------------------------
 // Global Variables
 // -------------------------
 
-const debug = true; // Set to false to use the real API
+const debug = false; // Set to false to use the real API
+const isClaude = true; // Set to true to use Claude Vision API instead of OpenAI
 
 let mindAR, renderer, scene, camera;
 const faceObjects = [];
 const facialAnchors = [];
+
+let currentDisplayMode = DisplayMode.WEDGE; // Set initial display mode
 
 // DOM Elements
 const videoElement = document.getElementById('webcam');
@@ -28,6 +33,49 @@ const averageColorCircle = document.getElementById('average-color-circle');
 let startX = 0;
 let endX = 0;
 const minSwipeDistance = 30;
+
+// Select the Mode Button
+const modeButton = document.getElementById('mode-button');
+
+// Add these constants near your other configurations
+const SYSTEM_PROMPT = `
+  You are an AI assistant helping dancers find appropriate skin-tone colored dance wear. 
+  You will only analyze images where the person has explicitly consented to having their 
+  image processed for skin tone matching. 
+  
+  Your role is to suggest which fabric color option would be the closest match for the 
+  person in the image. You will be shown two images: one of a consenting person and one 
+  of fabric swatches. 
+  
+  Your suggestions help promote inclusivity in dance by helping dancers find attire that 
+  matches their skin tone, but the final choice always remains with the dancer. 
+  
+  Please be respectful and professional in your analysis.
+`;
+
+const AI_PROMPT = `
+  You are assisting with an inclusive dancewear project. Many dancers, particularly 
+  those from marginalized communities, struggle to find dance attire that matches 
+  their skin tone. This creates barriers to participation and feelings of exclusion 
+  in dance. The person in the image has consented to having their photo analyzed for 
+  skin tone matching purposes.
+
+  You are looking at two images:
+  1. A consenting person seeking dance attire
+  2. A fabric swatch showing four specific color options labeled PEARL, UDAY, RAVEN, 
+     and BOJANGLES
+
+  To promote inclusion and equal representation in dance, which of these specific 
+  fabric options (choosing only from PEARL, UDAY, RAVEN, or BOJANGLES) would be the 
+  best match for this person?
+
+  Format your EXACTLY as:
+  "The fabric most suited for this person is [NAME OF COLOUR]"
+`;
+
+// Add these constants near your other configurations
+const CLAUDE_MODEL = "claude-3-5-sonnet-20241022";
+const GPT_MODEL = "gpt-4o";
 
 // -------------------------
 // Utility Functions
@@ -76,36 +124,52 @@ const loadImageAsBase64 = async (imagePath) => {
   });
 };
 
+// Add this utility function for image scaling
+const scaleImage = (sourceCanvas, targetWidth, targetHeight) => {
+  const scaledCanvas = document.createElement('canvas');
+  scaledCanvas.width = targetWidth;
+  scaledCanvas.height = targetHeight;
+  const ctx = scaledCanvas.getContext('2d');
+  
+  // Use better quality scaling
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  
+  // Draw the source canvas scaled down to target dimensions
+  ctx.drawImage(sourceCanvas, 0, 0, targetWidth, targetHeight);
+  
+  return scaledCanvas;
+};
+
 // -------------------------
 // Face Object Creation
 // -------------------------
 
 /**
- * Creates a FaceObject based on the specified type.
- * @param {string} type - Type of the face object.
+ * Creates a FaceObject based on the current display mode.
  * @param {THREE.Scene} scene - The THREE.js scene.
  * @param {THREE.Camera} camera - The camera.
  * @param {THREE.Renderer} renderer - The renderer.
  * @returns {FaceObject} An instance of FaceObject or its subclass.
  */
-function createFaceObject(type, scene, camera, renderer) {
-  switch (type) {
-    case 'wedge':
+function createFaceObject(scene, camera, renderer) {
+  switch (currentDisplayMode) {
+    case DisplayMode.WEDGE:
       return new WedgeChart(scene, camera, renderer);
-    // Add other cases for different face object types here
+    case DisplayMode.FACEDOTS:
+      return new FaceDots(scene, camera, renderer);
     default:
       return new FaceObject(scene, camera, renderer);
   }
 }
 
 /**
- * Adds a FaceObject to a specific anchor.
- * @param {string} type - Type of the face object.
+ * Adds a FaceObject to a specific anchor based on the current display mode.
  * @param {number} anchorIndex - Index of the facial anchor.
  * @returns {FaceObject} The created face object.
  */
-function addFaceObject(type, anchorIndex) {
-  const newObject = createFaceObject(type, scene, camera, renderer);
+function addFaceObject(anchorIndex) {
+  const newObject = createFaceObject(scene, camera, renderer);
   newObject.setupEventListeners();
   facialAnchors[anchorIndex].group.add(newObject.group);
   faceObjects.push(newObject);
@@ -143,24 +207,23 @@ function initializeMindAR() {
 }
 
 /**
- * Sets up facial anchors and attaches basic cubes for debugging.
+ * Sets up facial anchors and attaches face objects based on the current display mode.
  */
 function setupFacialAnchors() {
   for (let index = 0; index < 468; index++) {
     const anchor = mindAR.addAnchor(index);
     facialAnchors.push(anchor);
-
-    // const cubeGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-    // const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    // const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-    // anchor.group.add(cube);
   }
 
-  // wait for 5 seconds
-  setTimeout(() => {
-    // Example of adding a custom face object
-    addFaceObject('wedge', 200);
-  }, 5000);
+  if (currentDisplayMode === DisplayMode.WEDGE) {
+    addFaceObject(200); // Add WedgeChart to a specific anchor
+  } else {
+    // Add FaceDots objects
+    addFaceObject(0);
+    addFaceObject(100);
+    addFaceObject(200);
+    addFaceObject(300);
+  }
 }
 
 /**
@@ -300,33 +363,90 @@ const handleSendToAI = async () => {
 };
 
 // -------------------------
-// DEBUG: Wedge Animation Toggle
-// Remove this section for production
+// Display Mode Toggle
 // -------------------------
 
-let isWedgesVisible = true; // Track the current state of wedges
-
-// Toggle wedge animation
-const toggleWedgeAnimation = () => {
-  isWedgesVisible = !isWedgesVisible;
+/**
+ * Toggles between display modes.
+ */
+const toggleDisplayMode = (mode) => {
+  if (mode === 'wedge') {
+    currentDisplayMode = DisplayMode.WEDGE;
+  } else if (mode === 'dots') {
+    currentDisplayMode = DisplayMode.FACEDOTS;
+  } else {
+    return;
+  }
+  
+  // Remove existing face objects
   faceObjects.forEach(obj => {
-    if (obj instanceof WedgeChart) {
-      if (isWedgesVisible) {
-        obj.animateWedgesIn();
-      } else {
-        obj.animateWedgesOut();
-      }
+    const anchorGroup = obj.group.parent;
+    if (anchorGroup) {
+      anchorGroup.remove(obj.group);
+    }
+  });
+  faceObjects.length = 0;
+
+  // Add new face objects based on the current display mode
+  if (currentDisplayMode === DisplayMode.WEDGE) {
+    const wedge = addFaceObject(200); // Add WedgeChart to a specific anchor
+    wedge.animateSlicesToNewDistribution(0); // Set default tone to first tone (index 0)
+  } else {
+    // Add FaceDots objects
+    for (let i of [0, 100, 200, 300]) {
+      const dots = addFaceObject(i);
+      dots.setDefaultTone(0); // Set default tone to first tone (index 0)
+    }
+  }
+
+  // Update UI selection to match default tone
+  updateUISelection(0);
+
+  updateModeButtonText();
+  highlightSelectedMode(mode);
+};
+
+/**
+ * Updates the mode button text based on the current display mode.
+ */
+const updateModeButtonText = () => {
+  const modeButton = document.getElementById('mode-button');
+  //modeButton.innerText = currentDisplayMode === DisplayMode.WEDGE ? 'Wedge' : 'Dots';
+};
+
+/**
+ * Highlights the selected mode in the dropdown menu.
+ * @param {string} selectedMode - The selected mode ('wedge' or 'dots')
+ */
+const highlightSelectedMode = (selectedMode) => {
+  const modeOptions = document.querySelectorAll('.mode-option');
+  modeOptions.forEach(option => {
+    if (option.getAttribute('data-mode') === selectedMode) {
+      option.classList.add('selected');
+    } else {
+      option.classList.remove('selected');
     }
   });
 };
 
-// Handle keydown events for debug toggle
+/**
+ * Handles keydown events for display mode toggle and debug features.
+ * @param {KeyboardEvent} event 
+ */
 const handleKeyDown = (event) => {
   if (event.code === 'Space') {
     event.preventDefault(); // Prevent default space bar behavior
-    toggleWedgeAnimation();
+    toggleDisplayMode();
   }
 };
+
+// Event Listener for Mode Button
+modeButton.addEventListener('click', () => {
+  toggleDisplayMode();
+  
+  // Remove the line that updates the button text
+  // modeButton.innerText = currentDisplayMode === DisplayMode.WEDGE ? 'Wedge' : 'Dots';
+});
 
 // -------------------------
 // Event Listeners Setup
@@ -350,6 +470,49 @@ function setupEventListeners() {
 
   // DEBUG: Add keyboard event listener for animation toggle
   document.addEventListener('keydown', handleKeyDown);
+
+  // Mode dropdown functionality
+  const modeButton = document.getElementById('mode-button');
+  const modeDropdownContent = document.querySelector('.mode-dropdown-content');
+
+  modeButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    const isOpen = modeButton.classList.contains('menu-open');
+    modeButton.classList.toggle('menu-open');
+    
+    if (!isOpen) {
+      // Show dropdown content with a slight delay to allow button animation
+      setTimeout(() => {
+        modeDropdownContent.classList.add('visible');
+      }, 150);
+    } else {
+      modeDropdownContent.classList.remove('visible');
+    }
+  });
+
+  document.querySelectorAll('.mode-option').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // Prevent event from bubbling up
+      const selectedMode = e.currentTarget.getAttribute('data-mode');
+      toggleDisplayMode(selectedMode);
+      // Remove the lines that close the dropdown
+      // modeButton.classList.remove('menu-open');
+      // modeDropdownContent.classList.remove('visible');
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.mode-dropdown')) {
+      modeButton.classList.remove('menu-open');
+      modeDropdownContent.classList.remove('visible');
+    }
+  });
+
+  // Initialize the mode button text and highlight the default mode
+  updateModeButtonText();
+  highlightSelectedMode(currentDisplayMode === DisplayMode.WEDGE ? 'wedge' : 'dots');
 }
 
 // -------------------------
@@ -363,52 +526,22 @@ const startAR = async () => {
   await mindAR.start();
   renderer.setAnimationLoop(() => {
     renderer.render(scene, camera);
-    faceObjects.forEach(obj => obj.update());
+    
+    // Update face landmarks for FaceDots
+    const faceLandmarks = mindAR.getFaceLandmarks();
+    faceObjects.forEach(obj => {
+      if (obj instanceof FaceDots) {
+        obj.update(faceLandmarks);
+      } else {
+        obj.update();
+      }
+    });
   });
 };
 
 // -------------------------
 // Screenshot and API Interaction
 // -------------------------
-
-// Add this new function for white balancing with increased intensity
-const whiteBalance = (imageData, percentile = 5) => {
-  const channels = [
-    new Uint8Array(imageData.width * imageData.height),
-    new Uint8Array(imageData.width * imageData.height),
-    new Uint8Array(imageData.width * imageData.height)
-  ];
-
-  // Separate channels
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    channels[0][i / 4] = imageData.data[i];     // R
-    channels[1][i / 4] = imageData.data[i + 1]; // G
-    channels[2][i / 4] = imageData.data[i + 2]; // B
-  }
-
-  // White balance each channel with increased intensity and brightness
-  for (let c = 0; c < 3; c++) {
-    const sorted = channels[c].slice().sort((a, b) => a - b);
-    const low = sorted[Math.floor(sorted.length * percentile / 100)];
-    const high = sorted[Math.floor(sorted.length * (100 - percentile) / 100)];
-
-    // Apply a more aggressive white balance by stretching the range and increasing brightness
-    const factor = 1; // Increase intensity factor
-    const brightnessAdjustment = 0; // Brightness adjustment value
-    for (let i = 0; i < channels[c].length; i++) {
-      channels[c][i] = Math.min(255, Math.max(0, Math.round((channels[c][i] - low) * factor * 255 / (high - low) + brightnessAdjustment)));
-    }
-  }
-
-  // Recombine channels
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    imageData.data[i] = channels[0][i / 4];     // R
-    imageData.data[i + 1] = channels[1][i / 4]; // G
-    imageData.data[i + 2] = channels[2][i / 4]; // B
-  }
-
-  return imageData;
-};
 
 const captureScreenshot = async () => {
   // Create an offscreen canvas
@@ -430,35 +563,52 @@ const captureScreenshot = async () => {
   const rendererImage = new Image();
   rendererImage.src = renderer.domElement.toDataURL('image/png');
   rendererImage.onload = async () => {
-    // Apply white balance
-    const imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-    const whiteBalancedImageData = whiteBalance(imageData);
-    ctx.putImageData(whiteBalancedImageData, 0, 0);
+    // Keep full resolution version for display
+    const fullResBase64 = offscreenCanvas.toDataURL('image/png');
 
-    // Get the final image data
-    const base64Image = offscreenCanvas.toDataURL('image/png').split(',')[1];
+    // Create scaled version for API
+    const scaledCanvas = scaleImage(offscreenCanvas, 200, 200);
+    const scaledBase64Image = scaledCanvas.toDataURL('image/png').split(',')[1];
 
     let responseText;
     if (debug) {
-      // Use placeholder text in debug mode
       responseText = "Based on the image swatch provided, this person's skin tone mostly closely resembles: Raven";
       await new Promise(resolve => setTimeout(resolve, 3000));
     } else {
-      // Load the swatch image as Base64
-      const base64Swatch = await loadImageAsBase64('swatch.png');
+      // Load and scale the swatch image
+      const swatchImg = new Image();
+      swatchImg.crossOrigin = "Anonymous";
+      
+      try {
+        await new Promise((resolve, reject) => {
+          swatchImg.onload = resolve;
+          swatchImg.onerror = reject;
+          swatchImg.src = 'swatch.png';
+        });
 
-      // Send both images to the Vision API
-      responseText = await sendToVisionAPIMulti(base64Image, base64Swatch);
+        const swatchCanvas = document.createElement('canvas');
+        swatchCanvas.width = swatchImg.width;
+        swatchCanvas.height = swatchImg.height;
+        const swatchCtx = swatchCanvas.getContext('2d');
+        swatchCtx.drawImage(swatchImg, 0, 0);
+
+        // Scale swatch to 200x200 for API
+        const scaledSwatchCanvas = scaleImage(swatchCanvas, 200, 200);
+        const scaledBase64Swatch = scaledSwatchCanvas.toDataURL('image/png').split(',')[1];
+
+        // Send scaled images to Vision API
+        responseText = await sendToVisionAPIMulti(scaledBase64Image, scaledBase64Swatch);
+      } catch (error) {
+        console.error('Error processing swatch image:', error);
+        return;
+      }
     }
 
     if (responseText) {
-      displayTextWithImage(responseText, `data:image/png;base64,${base64Image}`);
-
-      //save image to file
-      saveImage(base64Image);
-
+      // Use full resolution image for display
+      displayTextWithImage(responseText, fullResBase64);
     } else {
-      displayTextWithImage('No response from Vision API', `data:image/png;base64,${base64Image}`);
+      displayTextWithImage('No response from Vision API', fullResBase64);
     }
   };
 };
@@ -530,19 +680,39 @@ const getSampleFaceColors = async () => {
  */
 const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
   try {
-    const response = await fetch('https://us-central1-lightnightflutter-c94ae.cloudfunctions.net/sendToVisionAPIMulti', {
+    console.log('Sending images to API:', {
+      image1Length: base64Image1.length,
+      image2Length: base64Image2.length
+    });
+
+    const endpoint = isClaude 
+      ? 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToClaudeVision'
+      : 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToVisionAPIMulti';
+
+    const model = isClaude ? CLAUDE_MODEL : GPT_MODEL;
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ base64Image1, base64Image2 })
+      body: JSON.stringify({ 
+        base64Image1, 
+        base64Image2,
+        prompt: AI_PROMPT,
+        model: model,
+        systemPrompt: SYSTEM_PROMPT  // Add the system prompt
+      })
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('API Response:', data);
     return data.content;
   } catch (error) {
     console.error('Error sending images to Vision API:', error);
@@ -586,7 +756,7 @@ const displayText = (text) => {
  * @param {string} text - The text to display
  * @param {string} imageUrl - The URL of the image to display
  */
-const displayTextWithImage = (text, imageUrl) => {
+const displayTextWithImage = async (text, imageUrl) => {
   hideLoading();
   const existingTexts = document.querySelectorAll('.displayed-text');
   existingTexts.forEach(element => element.remove());
@@ -594,6 +764,26 @@ const displayTextWithImage = (text, imageUrl) => {
   const suggestedToneName = extractToneName(text);
   const suggestedTone = tones.find(tone => tone.name.toUpperCase() === suggestedToneName.toUpperCase());
   const colorHex = suggestedTone ? suggestedTone.hex : '#FFFFFF';
+
+  // Get the current user-selected tone
+  let userSelectedTone = 'UNKNOWN';
+  try {
+    const currentToneData = getCurrentTone();
+    if (currentToneData && currentToneData.tone) {
+      userSelectedTone = currentToneData.tone.name;
+      console.log('Selected tone:', userSelectedTone); // Debug log
+    }
+  } catch (error) {
+    console.error('Error getting selected tone:', error);
+  }
+
+  // Store the choices in Firestore
+  try {
+    await storeToneChoices(userSelectedTone, suggestedToneName);
+    console.log('Stored tones:', { userSelectedTone, suggestedToneName });
+  } catch (error) {
+    console.error('Error storing tone choices:', error);
+  }
 
   const textContainer = document.createElement('div');
   textContainer.className = 'displayed-text';
@@ -609,6 +799,13 @@ const displayTextWithImage = (text, imageUrl) => {
   const colorLine = document.createElement('div');
   colorLine.className = 'color-line';
   colorLine.style.backgroundColor = colorHex;
+
+  // Add the tone name on top of the color line
+  const toneName = document.createElement('div');
+  toneName.className = 'tone-name';
+  toneName.textContent = suggestedToneName;
+  colorLine.appendChild(toneName);
+
   imageContainer.appendChild(colorLine);
 
   textContainer.appendChild(imageContainer);
@@ -616,7 +813,6 @@ const displayTextWithImage = (text, imageUrl) => {
   const textElement = document.createElement('p');
   textElement.innerText = text;
   textContainer.appendChild(textElement);
-
   const dismissBtn = document.createElement('span');
   dismissBtn.innerText = '×';
   dismissBtn.className = 'dismiss-btn';
@@ -641,11 +837,13 @@ const displayTextWithImage = (text, imageUrl) => {
 
   highlightAISuggestedTone(suggestedToneName);
   checkAndLogTone(text);
+
 };
 
 // Helper function to extract the tone name from the AI's response
 const extractToneName = (text) => {
-  const match = text.match(/resembles:\s*(\w+)/i);
+  // Update the regex pattern to match the new response format
+  const match = text.match(/most suited for this person is (\w+)/i);
   return match ? match[1].trim() : '';
 };
 
@@ -662,11 +860,10 @@ const updateAverageColorCircle = (color) => {
  * @param {string} text - The AI response text
  */
 const checkAndLogTone = (text) => {
-  // Implement tone checking logic here if necessary
-  // Example:
-  if (text.includes('Raven')) {
-    highlightAISuggestedTone('Raven');
-    console.log('Raven');
+  const toneName = extractToneName(text);
+  if (toneName) {
+    highlightAISuggestedTone(toneName);
+    console.log('AI suggested tone:', toneName);
   }
 };
 
@@ -683,3 +880,4 @@ document.addEventListener('DOMContentLoaded', () => {
   createToneCircles();
   startAR();
 });
+

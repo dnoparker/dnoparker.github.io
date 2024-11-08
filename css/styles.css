@@ -1,28 +1,33 @@
+/* Root variables */
 :root {
-  --primary-color: #e43636; /* Your current blue color */
-  --secondary-color: #ff6464; /* Your current blue color */
+  --primary-color: #e43636;
+  --secondary-color: #ff6464;
+}
+
+/* Global styles */
+* {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
 body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    margin-bottom: -env(safe-area-inset-bottom);
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Prevent scrolling */
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    font-family: 'Roboto', Arial, sans-serif; /* Add this line */
-    user-select: none; /* Add this line to prevent text selection */
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  font-family: 'Roboto', Arial, sans-serif;
+  user-select: none;
 }
 
+/* Container styles */
 #container {
   width: 100%;
   height: 100%;
@@ -31,108 +36,116 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  overflow: hidden;
 }
 
+/* Displayed text styles */
 .displayed-text {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    padding: 20px;
-    z-index: 1000;
-    max-width: 90%;
-    width: 75%; /* or remove this line entirely */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 20px 0; /* 20px top and bottom, 0 left and right */
-    user-select: none; /* Add this line to prevent text selection within the displayed text */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  z-index: 1000;
+  max-width: 90%;
+  width: 75%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  user-select: none;
 }
 
 .displayed-text .image-container {
-    width: 100%;
-    margin-bottom: 15px;
-    position: relative;
+  width: 100%;
+  margin-bottom: 15px;
+  position: relative;
 }
 
 .displayed-text .captured-image {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-}
-
-.color-line {
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 100%;
-    height: 40px;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 .displayed-text p {
-    margin: 10px 0 0;
-    text-align: center;
-    font-size: 16px;
-    line-height: 1.4;
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 .displayed-text .dismiss-btn {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 20px;
-    color: #666;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 20px;
+  color: #666;
 }
 
+/* Color line styles */
+.color-line {
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Button styles */
 .button {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 20px; /* Rounded corners for a modern look */
-    cursor: pointer; /* Changes cursor to pointer on hover */
-    transition: background-color 0.3s, color 0.3s;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .button:hover {
-    background-color: var(--primary-color);
+  background-color: var(--primary-color);
 }
 
 #send-to-ai {
-    position: absolute;
-    top: 50px;
-    left: 10px;
+  position: fixed;
+  top: 20px; /* Changed from bottom to top */
+  left: 20px;
+  z-index: 1000;
 }
 
 #get-average-colors {
-    top: 100px;
-    left: 10px;
+  top: 100px;
+  left: 10px;
 }
-
-
 
 .button-row {
-    display: flex;
-    align-items: center;
-    position: absolute;
-    top: 100px;
-    left: 10px;
+  position: fixed;
+  top: 70px; /* Changed from bottom to top, positioned below send-to-ai */
+  left: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
 }
 
+/* Average color circle styles */
 #average-color-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #ffffff; /* Default color */
-    margin-left: 10px; /* Space between button and circle */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  margin-left: 10px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Loading animation styles */
 .loading-hidden {
   display: none;
 }
@@ -165,41 +178,61 @@ body {
   50% { transform: translateY(-35px); }
 }
 
+.loading-text {
+  color: white;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+/* Tone circles styles */
 #tone-circles {
   position: fixed;
-  bottom: 20px;
-  left: 10%;
-  right: 10%;
+  left: 20px;
+  top: 200px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: flex-start;
+  gap: 45px;
+  height: calc(100% - 300px);
+  overflow-y: auto;
+  padding-bottom: 20px;
+  padding-left: 5px; /* Add padding to prevent cropping */
+  width: auto;
 }
 
 .tone-circle-container {
+  flex: 0 0 auto;
+  min-width: auto;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  gap: 15px;
   cursor: pointer;
   position: relative;
+  padding: 8px 15px; /* Added padding for the capsule */
+  margin-left: 3px;
+  border-radius: 25px; /* Added for capsule shape */
+  transition: background-color 0.3s ease; /* Smooth transition for background */
 }
 
 .tone-circle {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
+  min-width: 45px;
   border-radius: 50%;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease, border-color 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-  outline: none;
-  border: 3px solid transparent; /* Add a transparent border by default */
-  box-sizing: border-box; /* Include border in element's total size */
+  border: 3px solid transparent;
+  box-sizing: border-box;
 }
 
 .tone-name {
-  margin-top: 5px;
-  font-size: 12px;
+  margin: 0;
+  font-size: 14px;
   color: white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
 }
 
 .tone-circle-container:hover .tone-circle {
@@ -207,16 +240,9 @@ body {
 }
 
 .tone-circle-container.selected .tone-circle {
-  border-color: green; /* Change only the border color when selected */
+  border-color: rgb(99, 255, 68);
 }
 
-/* Add this new rule to prevent focus outline on all elements */
-* {
-  -webkit-tap-highlight-color: transparent;
-  outline: none;
-}
-
-/* Add this new rule to override any remaining highlight effects */
 .tone-circle-container:active,
 .tone-circle-container:focus,
 .tone-circle:active,
@@ -226,26 +252,28 @@ body {
 }
 
 .ai-suggested-label {
+  display: none; /* Hide the old label */
+}
+
+/* Add new AI suggested capsule styles */
+.tone-circle-container.ai-suggested {
+  background-color: rgba(228, 54, 54, 0.15); /* Semi-transparent primary color */
+}
+
+.tone-circle-container.ai-suggested::before {
+  content: 'AI Suggested';
   position: absolute;
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--primary-color);
-  color: white;
-  padding: 3px 7px;
-  border-radius: 4px;
+  top: -20px;
+  left: 10px;
   font-size: 12px;
+  color: var(--primary-color);
+  background-color: rgba(228, 54, 54, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
   white-space: nowrap;
 }
 
-#controls, #loading-animation {
-    pointer-events: none; /* Allow clicks to pass through */
-}
-
-.button, .button-row {
-    pointer-events: auto; /* Keep pointer events for interactive elements */
-}
-
+/* Controls styles */
 #controls {
   position: absolute;
   top: 10px;
@@ -254,6 +282,7 @@ body {
   padding: 10px;
   border-radius: 5px;
   z-index: 1000;
+  pointer-events: none;
 }
 
 .control {
@@ -275,15 +304,185 @@ body {
   margin-top: 5px;
 }
 
-.loading-text {
-  color: white; /* Change to your desired color */
-  font-size: 16px; /* Adjust the font size as needed */
-  margin-top: 10px; /* Space between the loading animation and text */
+/* Pointer events */
+#controls, #loading-animation {
+  pointer-events: none;
 }
 
+.button, .button-row {
+  pointer-events: auto;
+}
+
+/* Color square styles */
 .color-square {
-  width: 50px; /* Size of the color square */
-  height: 50px; /* Size of the color square */
-  margin: 10px auto; /* Center the square */
-  border: 2px solid #ccc; /* Optional border */
+  width: 50px;
+  height: 50px;
+  margin: 10px auto;
+  border: 2px solid #ccc;
+}
+
+/* Mode Button Styles */
+.mode-dropdown {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1001;
+}
+
+.mode-button {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(183, 154, 113, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  margin-bottom: 25px; /* Add margin to create space for the text */
+}
+
+.mode-button-text {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  width: 100%; /* Ensure text has enough width */
+  text-align: center; /* Center the text */
+}
+
+.mode-button.menu-open {
+  border-radius: 30px;
+  height: 180px; /* Increased height to accommodate content better */
+  background-color: rgba(183, 154, 113, 0.9);
+  margin-bottom: 25px;
+}
+
+.mode-dropdown-content {
+  display: none;
+  position: absolute;
+  top: 45%; /* Moved slightly up from 50% */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mode-dropdown-content.visible {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px; /* Adjusted gap between options */
+  opacity: 1;
+}
+
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+  margin-bottom: 5px; /* Added margin to ensure text doesn't touch bottom */
+}
+
+.mode-option-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: white;
+  margin-bottom: 5px;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+}
+
+.mode-option-circle:hover {
+  transform: scale(1.1);
+}
+
+.mode-option.selected .mode-option-circle {
+  border-color: rgb(255, 107, 107);
+  scale: 1.1;
+}
+
+.mode-option-text {
+  font-size: 12px;
+  color: white;
+}
+
+/* Add media queries for different screen sizes */
+@media screen and (max-width: 768px) {
+  .tone-circle {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+  }
+
+  .button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  #tone-circles {
+    top: 180px; /* Adjusted for smaller screens */
+    gap: 40px; /* Adjusted for smaller screens but still maintaining good spacing */
+  }
+}
+
+@media screen and (max-width: 480px) {
+  #tone-circles {
+    top: 160px; /* Adjusted for mobile screens */
+    gap: 35px;
+  }
+
+  .tone-circle {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+  }
+
+  .tone-name {
+    font-size: 12px;
+  }
+
+  .button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  #send-to-ai {
+    top: 10px;
+    left: 10px;
+  }
+
+  .button-row {
+    top: 60px;
+    left: 10px;
+  }
+
+  #average-color-circle {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+/* Add custom scrollbar styling */
+#tone-circles::-webkit-scrollbar {
+  height: 4px;
+}
+
+#tone-circles::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+#tone-circles::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
 }

@@ -32,6 +32,9 @@
   
   <!-- Google Fonts for Roboto -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Remove any existing Firebase script tags and add this instead -->
+  <script type="module" src="js/firebase.js"></script>
 </head>
 
 <body>
@@ -65,6 +68,23 @@
   
   <!-- Add this new div for the tone circles -->
   <div id="tone-circles"></div>
+  
+  <!-- Replace the existing mode-dropdown div with this -->
+  <div class="mode-dropdown">
+    <button id="mode-button" class="mode-button">
+      <span class="mode-button-text">Mode</span>
+    </button>
+    <div class="mode-dropdown-content">
+      <a href="#" class="mode-option" data-mode="wedge">
+        <div class="mode-option-circle"></div>
+        <span class="mode-option-text">Wedge</span>
+      </a>
+      <a href="#" class="mode-option" data-mode="dots">
+        <div class="mode-option-circle"></div>
+        <span class="mode-option-text">Dots</span>
+      </a>
+    </div>
+  </div>
 </body>
 
 </html>

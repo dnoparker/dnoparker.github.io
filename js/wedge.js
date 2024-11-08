@@ -54,6 +54,25 @@ export class WedgeChart extends FaceObject {
 
         // scale group
         this.group.scale.set(this.scale, this.scale, this.scale);
+
+        this.currentTween = null;
+        this.isAnimating = false;
+        this.lastUpdateTime = 0;
+        this.updateInterval = 1000 / 30; // Update at 30fps
+
+        // Add event listener for tone selection
+        document.addEventListener('toneSelected', (event) => {
+            const index = event.detail.index;
+            this.animateSlicesToNewDistribution(index);
+        });
+
+        // Initialize with first tone selected
+        this.defaultToneIndex = 0;
+
+        // Select default tone on initialization
+        this.slices.forEach((slice, index) => {
+            slice.userData.selected = (index === this.defaultToneIndex);
+        });
     }
 
     initialize() {
@@ -167,7 +186,7 @@ export class WedgeChart extends FaceObject {
             Math.cos(outerArcStartAngle) * outerRadius, Math.sin(outerArcStartAngle) * outerRadius
         );
 
-        shape.absarc(0, 0, outerRadius, outerArcStartAngle, outerArcEndAngle, false);
+        shape.absarc(0, 0, outerRadius, outerArcStartAngle, outerArcEndAngle, false, 8);
 
         shape.quadraticCurveTo(
             Math.cos(endAngle) * outerRadius, Math.sin(endAngle) * outerRadius,
@@ -181,7 +200,7 @@ export class WedgeChart extends FaceObject {
             Math.cos(innerArcEndAngle) * innerRadius, Math.sin(innerArcEndAngle) * innerRadius
         );
 
-        shape.absarc(0, 0, innerRadius, innerArcEndAngle, innerArcStartAngle, true);
+        shape.absarc(0, 0, innerRadius, innerArcEndAngle, innerArcStartAngle, true, 8);
 
         shape.quadraticCurveTo(
             Math.cos(startAngle) * innerRadius, Math.sin(startAngle) * innerRadius,
@@ -221,6 +240,11 @@ export class WedgeChart extends FaceObject {
 
         this.slices.forEach((slice, index) => {
             slice.userData.selected = (index === clickedIndex);
+        });
+
+        // Update UI circles when wedge is selected
+        import('./tones.js').then(module => {
+            module.updateUISelection(clickedIndex);
         });
     }
 
@@ -364,47 +388,119 @@ export class WedgeChart extends FaceObject {
 
     // Add this new method to animate the wedges out
     animateWedgesOut() {
-        if (this.isAnimatingOut) return;
-        this.isAnimatingOut = true;
-    
-        new TWEEN.Tween({ heights: this.currentHeights, opacity: 1 })
-            .to({ heights: Array(this.sliceCount).fill(0.5), opacity: 0 }, 1000)
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+
+        if (this.currentTween) {
+            this.currentTween.stop();
+        }
+
+        const startHeights = [...this.currentHeights];
+        const startOpacity = 1;
+        const endHeights = Array(this.sliceCount).fill(0.5);
+        const endOpacity = 0;
+
+        this.currentTween = new TWEEN.Tween({ t: 0 })
+            .to({ t: 1 }, 1000)
             .easing(TWEEN.Easing.Quadratic.In)
-            .onUpdate(({ heights, opacity }) => {
-                this.currentHeights = heights.map(height => parseFloat(height.toFixed(3)));
-                this.slices.forEach(slice => {
-                    slice.material.opacity = opacity;
-                    slice.material.transparent = true;
-                });
-                this.updatePieChart();
+            .onUpdate(({ t }) => {
+                const now = TWEEN.now();
+                if (now - this.lastUpdateTime >= this.updateInterval) {
+                    this.updateWedges(startHeights, endHeights, startOpacity, endOpacity, t);
+                    this.lastUpdateTime = now;
+                }
             })
             .onComplete(() => {
-                this.isAnimatingOut = false;
+                this.isAnimating = false;
+                this.updateWedges(startHeights, endHeights, startOpacity, endOpacity, 1);
             })
             .start();
     }
-    
+
     animateWedgesIn() {
-        if (this.isAnimatingOut) return;
-    
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+
+        if (this.currentTween) {
+            this.currentTween.stop();
+        }
+
         const selectedIndex = this.slices.findIndex(slice => slice.userData.selected);
-        const targetHeights = this.calculateTargetHeights(
-            selectedIndex,
-            this.minOuterRadius,
-            this.maxOuterRadius
-        );
-    
-        new TWEEN.Tween({ heights: this.currentHeights, opacity: 0 })
-            .to({ heights: targetHeights, opacity: 1 }, 1000)
+        const startHeights = Array(this.sliceCount).fill(0.5);
+        const endHeights = this.calculateTargetHeights(selectedIndex, this.minOuterRadius, this.maxOuterRadius);
+        const startOpacity = 0;
+        const endOpacity = 1;
+
+        this.currentTween = new TWEEN.Tween({ t: 0 })
+            .to({ t: 1 }, 1000)
             .easing(TWEEN.Easing.Elastic.Out)
-            .onUpdate(({ heights, opacity }) => {
-                this.currentHeights = heights.map(height => parseFloat(height.toFixed(3)));
-                this.slices.forEach(slice => {
-                    slice.material.opacity = opacity;
-                    slice.material.transparent = true;
-                });
-                this.updatePieChart();
+            .onUpdate(({ t }) => {
+                const now = TWEEN.now();
+                if (now - this.lastUpdateTime >= this.updateInterval) {
+                    this.updateWedges(startHeights, endHeights, startOpacity, endOpacity, t);
+                    this.lastUpdateTime = now;
+                }
+            })
+            .onComplete(() => {
+                this.isAnimating = false;
+                this.updateWedges(startHeights, endHeights, startOpacity, endOpacity, 1);
             })
             .start();
+    }
+
+    updateWedges(startHeights, endHeights, startOpacity, endOpacity, t) {
+        this.currentHeights = startHeights.map((start, i) => {
+            const end = endHeights[i];
+            return parseFloat((start + (end - start) * t).toFixed(3));
+        });
+
+        const opacity = startOpacity + (endOpacity - startOpacity) * t;
+
+        this.slices.forEach(slice => {
+            slice.material.opacity = opacity;
+            slice.material.transparent = true;
+        });
+
+        this.updatePieChart();
+    }
+
+    /**
+     * Clean up resources and remove event listeners when disposing of the chart
+     */
+    dispose() {
+        // Stop any ongoing animations
+        if (this.currentTween) {
+            this.currentTween.stop();
+            this.currentTween = null;
+        }
+
+        // Remove event listeners
+        document.getElementById('container').removeEventListener('click', this.onClick);
+        window.removeEventListener('wheel', this.onScroll);
+
+        // Dispose of geometries and materials
+        this.slices.forEach(slice => {
+            slice.geometry.dispose();
+            slice.material.dispose();
+        });
+
+        // Clear arrays
+        this.slices = [];
+        this.sliceValues = [];
+        this.sliceGeometries = [];
+        this.currentHeights = [];
+
+        // Remove group from scene
+        this.scene.remove(this.group);
+
+        // Call parent class dispose if it exists
+        if (super.dispose) {
+            super.dispose();
+        }
+    }
+
+    // Add new method to set default tone
+    setDefaultTone(index) {
+        this.animateSlicesToNewDistribution(index);
     }
 }

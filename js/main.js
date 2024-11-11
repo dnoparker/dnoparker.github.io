@@ -6,7 +6,7 @@ import { FaceObject } from './faceObject.js'; // Import the base FaceObject clas
 import { FaceDots } from './faceDots.js';
 import { DisplayMode } from './displayMode.js';
 import { storeToneChoices } from './firebase.js';
-import { debug, isClaude, CLAUDE_MODEL, GPT_MODEL, SYSTEM_PROMPT, AI_PROMPT, DISPLAY_SETTINGS, API_ENDPOINTS, FACE_ANCHOR_POINTS, CANVAS_SETTINGS } from './config.js';
+import { debug, isClaude, CLAUDE_MODEL, GPT_MODEL, SYSTEM_PROMPT, AI_PROMPT, DISPLAY_SETTINGS, API_ENDPOINTS, FACE_ANCHOR_POINTS, CANVAS_SETTINGS, storeImages } from './config.js';
 
 // -------------------------
 // Global Variables
@@ -486,6 +486,38 @@ const startAR = async () => {
 // Screenshot and API Interaction
 // -------------------------
 
+/**
+ * Uploads an image to the server
+ * @param {string} base64Image - Base64 encoded image data
+ * @returns {Promise<string>} Success status of upload
+ */
+const uploadImageToServer = async (base64Image) => {
+  try {
+    const response = await fetch(base64Image);
+    const blob = await response.blob();
+    
+    // Generate filename with timestamp
+    const filename = `capture_${Date.now()}.png`;
+    const imageUrl = `https://hotknife.co.uk/imageuploader_1/uploads/${filename}`;
+    
+    // Send to PHP server in background
+    const formData = new FormData();
+    formData.append('image', blob, filename);
+    fetch('https://hotknife.co.uk/imageuploader_1/upload.php', {
+      method: 'POST',
+      body: formData
+    }).catch(error => console.error('PHP upload error:', error));
+
+    // Return URL immediately
+    console.log('Generated image URL:', imageUrl);
+    return imageUrl;
+    
+  } catch (error) {
+    console.error('Error preparing image:', error);
+    return null;
+  }
+};
+
 const captureScreenshot = async () => {
   // Create an offscreen canvas
   const offscreenCanvas = document.createElement('canvas');
@@ -506,12 +538,17 @@ const captureScreenshot = async () => {
   const rendererImage = new Image();
   rendererImage.src = renderer.domElement.toDataURL('image/png');
   rendererImage.onload = async () => {
-    // Keep full resolution version for display
     const fullResBase64 = offscreenCanvas.toDataURL('image/png');
-
-    // Create scaled version for API
     const scaledCanvas = scaleImage(offscreenCanvas, CANVAS_SETTINGS.API_IMAGE_SIZE, CANVAS_SETTINGS.API_IMAGE_SIZE);
-    const scaledBase64Image = scaledCanvas.toDataURL('image/png').split(',')[1];
+    const scaledBase64Image = scaledCanvas.toDataURL('image/png');
+    const scaledBase64ForAPI = scaledBase64Image.split(',')[1];
+
+    // Store the uploadedImageUrl before the API call
+    let uploadedImageUrl = null;
+    if (storeImages) {
+      uploadedImageUrl = await uploadImageToServer(scaledBase64Image);
+      console.log('Image upload result:', uploadedImageUrl); // Debug log
+    }
 
     let responseText;
     if (debug) {
@@ -540,7 +577,7 @@ const captureScreenshot = async () => {
         const scaledBase64Swatch = scaledSwatchCanvas.toDataURL('image/png').split(',')[1];
 
         // Send scaled images to Vision API
-        responseText = await sendToVisionAPIMulti(scaledBase64Image, scaledBase64Swatch);
+        responseText = await sendToVisionAPIMulti(scaledBase64ForAPI, scaledBase64Swatch);
       } catch (error) {
         console.error('Error processing swatch image:', error);
         return;
@@ -548,10 +585,10 @@ const captureScreenshot = async () => {
     }
 
     if (responseText) {
-      // Use full resolution image for display
-      displayTextWithImage(responseText, fullResBase64);
+      // Make sure we pass the uploadedImageUrl here
+      await displayTextWithImage(responseText, fullResBase64, uploadedImageUrl);
     } else {
-      displayTextWithImage('No response from Vision API', fullResBase64);
+      await displayTextWithImage('No response from Vision API', fullResBase64, uploadedImageUrl);
     }
   };
 };
@@ -699,7 +736,7 @@ const displayText = (text) => {
  * @param {string} text - The text to display
  * @param {string} imageUrl - The URL of the image to display
  */
-const displayTextWithImage = async (text, imageUrl) => {
+const displayTextWithImage = async (text, imageUrl, uploadedImageUrl = null) => {
   hideLoading();
   const existingTexts = document.querySelectorAll('.displayed-text');
   existingTexts.forEach(element => element.remove());
@@ -708,22 +745,27 @@ const displayTextWithImage = async (text, imageUrl) => {
   const suggestedTone = tones.find(tone => tone.name.toUpperCase() === suggestedToneName.toUpperCase());
   const colorHex = suggestedTone ? suggestedTone.hex : '#FFFFFF';
 
-  // Get the current user-selected tone
   let userSelectedTone = 'UNKNOWN';
   try {
     const currentToneData = getCurrentTone();
     if (currentToneData && currentToneData.tone) {
       userSelectedTone = currentToneData.tone.name;
-      console.log('Selected tone:', userSelectedTone); // Debug log
+      console.log('Selected tone:', userSelectedTone);
     }
   } catch (error) {
     console.error('Error getting selected tone:', error);
   }
 
-  // Store the choices in Firestore
+  // Log the values before storing
+  console.log('About to store in Firebase:', {
+    userSelectedTone,
+    suggestedToneName,
+    uploadedImageUrl
+  });
+
   try {
-    await storeToneChoices(userSelectedTone, suggestedToneName);
-    console.log('Stored tones:', { userSelectedTone, suggestedToneName });
+    await storeToneChoices(userSelectedTone, suggestedToneName, uploadedImageUrl);
+    console.log('Successfully stored in Firebase with image URL:', uploadedImageUrl);
   } catch (error) {
     console.error('Error storing tone choices:', error);
   }

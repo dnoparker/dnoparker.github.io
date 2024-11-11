@@ -16,19 +16,33 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export async function storeToneChoices(userTone, aiTone) {
+export const storeToneChoices = async (userSelectedTone, aiSuggestedTone, imageUrl = null) => {
   try {
-    const docRef = await addDoc(collection(db, 'toneChoices'), {
-      userTone,
-      aiTone,
-      timestamp: serverTimestamp()
+    console.log('storeToneChoices called with:', {
+      userSelectedTone,
+      aiSuggestedTone,
+      imageUrl
     });
-    console.log("Document written with ID: ", docRef.id);
-    return docRef.id;
+
+    const data = {
+      userSelectedTone,
+      aiSuggestedTone,
+      timestamp: new Date().toISOString()
+    };
+
+    if (imageUrl) {
+      console.log('Adding image URL to Firebase data:', imageUrl);
+      data.imageUrl = imageUrl;
+    }
+
+    const docRef = await addDoc(collection(db, "toneChoices"), data);
+    console.log('Document written with ID:', docRef.id);
+    
+    return docRef;
   } catch (error) {
-    console.error("Error adding document: ", error);
+    console.error("Error storing tone choices:", error);
     throw error;
   }
-}
+};
 
 export { db }; 

@@ -1,6 +1,7 @@
 // Debug Settings
 export const debug = false; // Set to false to use the real API
 export const isClaude = true; // Set to true to use Claude Vision API instead of OpenAI
+export const storeImages = true;
 
 // API Models
 export const CLAUDE_MODEL = "claude-3-5-sonnet-20241022";

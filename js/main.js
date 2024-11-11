@@ -6,20 +6,18 @@ import { FaceObject } from './faceObject.js'; // Import the base FaceObject clas
 import { FaceDots } from './faceDots.js';
 import { DisplayMode } from './displayMode.js';
 import { storeToneChoices } from './firebase.js';
-
+import { debug, isClaude, CLAUDE_MODEL, GPT_MODEL, SYSTEM_PROMPT, AI_PROMPT, DISPLAY_SETTINGS, API_ENDPOINTS, FACE_ANCHOR_POINTS, CANVAS_SETTINGS } from './config.js';
 
 // -------------------------
 // Global Variables
 // -------------------------
 
-const debug = false; // Set to false to use the real API
-const isClaude = true; // Set to true to use Claude Vision API instead of OpenAI
-
 let mindAR, renderer, scene, camera;
 const faceObjects = [];
 const facialAnchors = [];
 
-let currentDisplayMode = DisplayMode.WEDGE; // Set initial display mode
+let currentDisplayMode = DisplayMode[DISPLAY_SETTINGS.DEFAULT_DISPLAY_MODE];
+const minSwipeDistance = DISPLAY_SETTINGS.MIN_SWIPE_DISTANCE;
 
 // DOM Elements
 const videoElement = document.getElementById('webcam');
@@ -32,50 +30,10 @@ const averageColorCircle = document.getElementById('average-color-circle');
 // Touch and Mouse Event Variables
 let startX = 0;
 let endX = 0;
-const minSwipeDistance = 30;
 
 // Select the Mode Button
 const modeButton = document.getElementById('mode-button');
 
-// Add these constants near your other configurations
-const SYSTEM_PROMPT = `
-  You are an AI assistant helping dancers find appropriate skin-tone colored dance wear. 
-  You will only analyze images where the person has explicitly consented to having their 
-  image processed for skin tone matching. 
-  
-  Your role is to suggest which fabric color option would be the closest match for the 
-  person in the image. You will be shown two images: one of a consenting person and one 
-  of fabric swatches. 
-  
-  Your suggestions help promote inclusivity in dance by helping dancers find attire that 
-  matches their skin tone, but the final choice always remains with the dancer. 
-  
-  Please be respectful and professional in your analysis.
-`;
-
-const AI_PROMPT = `
-  You are assisting with an inclusive dancewear project. Many dancers, particularly 
-  those from marginalized communities, struggle to find dance attire that matches 
-  their skin tone. This creates barriers to participation and feelings of exclusion 
-  in dance. The person in the image has consented to having their photo analyzed for 
-  skin tone matching purposes.
-
-  You are looking at two images:
-  1. A consenting person seeking dance attire
-  2. A fabric swatch showing four specific color options labeled PEARL, UDAY, RAVEN, 
-     and BOJANGLES
-
-  To promote inclusion and equal representation in dance, which of these specific 
-  fabric options (choosing only from PEARL, UDAY, RAVEN, or BOJANGLES) would be the 
-  best match for this person?
-
-  Format your EXACTLY as:
-  "The fabric most suited for this person is [NAME OF COLOUR]"
-`;
-
-// Add these constants near your other configurations
-const CLAUDE_MODEL = "claude-3-5-sonnet-20241022";
-const GPT_MODEL = "gpt-4o";
 
 // -------------------------
 // Utility Functions
@@ -124,9 +82,9 @@ const loadImageAsBase64 = async (imagePath) => {
   });
 };
 
-// Add this utility function for image scaling
+// Fix the scaleImage function
 const scaleImage = (sourceCanvas, targetWidth, targetHeight) => {
-  const scaledCanvas = document.createElement('canvas');
+  const scaledCanvas = document.createElement('canvas'); // Create new canvas instead of recursive call
   scaledCanvas.width = targetWidth;
   scaledCanvas.height = targetHeight;
   const ctx = scaledCanvas.getContext('2d');
@@ -216,13 +174,11 @@ function setupFacialAnchors() {
   }
 
   if (currentDisplayMode === DisplayMode.WEDGE) {
-    addFaceObject(200); // Add WedgeChart to a specific anchor
+    addFaceObject(FACE_ANCHOR_POINTS.WEDGE_ANCHOR);
   } else {
-    // Add FaceDots objects
-    addFaceObject(0);
-    addFaceObject(100);
-    addFaceObject(200);
-    addFaceObject(300);
+    FACE_ANCHOR_POINTS.DOT_ANCHORS.forEach(anchor => {
+      addFaceObject(anchor);
+    });
   }
 }
 
@@ -230,7 +186,7 @@ function setupFacialAnchors() {
  * Sets the initial camera position.
  */
 function setCameraPosition() {
-  camera.position.z = 5;
+  camera.position.z = DISPLAY_SETTINGS.CAMERA_POSITION_Z;
 }
 
 // -------------------------
@@ -402,17 +358,9 @@ const toggleDisplayMode = (mode) => {
   // Update UI selection to match default tone
   updateUISelection(0);
 
-  updateModeButtonText();
   highlightSelectedMode(mode);
 };
 
-/**
- * Updates the mode button text based on the current display mode.
- */
-const updateModeButtonText = () => {
-  const modeButton = document.getElementById('mode-button');
-  //modeButton.innerText = currentDisplayMode === DisplayMode.WEDGE ? 'Wedge' : 'Dots';
-};
 
 /**
  * Highlights the selected mode in the dropdown menu.
@@ -443,9 +391,6 @@ const handleKeyDown = (event) => {
 // Event Listener for Mode Button
 modeButton.addEventListener('click', () => {
   toggleDisplayMode();
-  
-  // Remove the line that updates the button text
-  // modeButton.innerText = currentDisplayMode === DisplayMode.WEDGE ? 'Wedge' : 'Dots';
 });
 
 // -------------------------
@@ -510,8 +455,6 @@ function setupEventListeners() {
     }
   });
 
-  // Initialize the mode button text and highlight the default mode
-  updateModeButtonText();
   highlightSelectedMode(currentDisplayMode === DisplayMode.WEDGE ? 'wedge' : 'dots');
 }
 
@@ -567,7 +510,7 @@ const captureScreenshot = async () => {
     const fullResBase64 = offscreenCanvas.toDataURL('image/png');
 
     // Create scaled version for API
-    const scaledCanvas = scaleImage(offscreenCanvas, 200, 200);
+    const scaledCanvas = scaleImage(offscreenCanvas, CANVAS_SETTINGS.API_IMAGE_SIZE, CANVAS_SETTINGS.API_IMAGE_SIZE);
     const scaledBase64Image = scaledCanvas.toDataURL('image/png').split(',')[1];
 
     let responseText;
@@ -593,7 +536,7 @@ const captureScreenshot = async () => {
         swatchCtx.drawImage(swatchImg, 0, 0);
 
         // Scale swatch to 200x200 for API
-        const scaledSwatchCanvas = scaleImage(swatchCanvas, 200, 200);
+        const scaledSwatchCanvas = scaleImage(swatchCanvas, CANVAS_SETTINGS.API_IMAGE_SIZE, CANVAS_SETTINGS.API_IMAGE_SIZE);
         const scaledBase64Swatch = scaledSwatchCanvas.toDataURL('image/png').split(',')[1];
 
         // Send scaled images to Vision API
@@ -686,8 +629,8 @@ const sendToVisionAPIMulti = async (base64Image1, base64Image2) => {
     });
 
     const endpoint = isClaude 
-      ? 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToClaudeVision'
-      : 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToVisionAPIMulti';
+      ? API_ENDPOINTS.CLAUDE_VISION
+      : API_ENDPOINTS.VISION_API_MULTI;
 
     const model = isClaude ? CLAUDE_MODEL : GPT_MODEL;
 

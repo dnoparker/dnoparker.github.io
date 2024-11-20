@@ -824,3 +824,8 @@ body {
 #oval-instruction-modal .modal-button:hover {
   background-color: #E60000;
 }
+
+/* Add these styles to ensure proper button visibility */
+.modal-button.hidden {
+  display: none;
+}

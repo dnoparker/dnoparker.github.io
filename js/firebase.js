@@ -16,27 +16,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export const storeToneChoices = async (userSelectedTone, aiSuggestedTone, imageUrl = null) => {
+export const storeToneChoices = async (userSelectedTone, aiSuggestedTone, imageUrl = null, aiResponse = null) => {
   try {
-    // Clean up the tone values
+    // Clean up the values
     const cleanUserTone = userSelectedTone?.trim() || null;
     const cleanAiTone = aiSuggestedTone?.trim() || null;
     const cleanImageUrl = imageUrl?.trim() || null;
+    const cleanAiResponse = aiResponse?.trim() || null;
 
     console.log('storeToneChoices called with:', {
       userSelectedTone: cleanUserTone,
       aiSuggestedTone: cleanAiTone,
-      imageUrl: cleanImageUrl
+      imageUrl: cleanImageUrl,
+      aiResponse: cleanAiResponse
     });
 
     const data = {
       userSelectedTone: cleanUserTone,
       aiSuggestedTone: cleanAiTone,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      aiResponse: cleanAiResponse
     };
 
     if (cleanImageUrl) {
-      console.log('Adding image URL to Firebase data:', cleanImageUrl);
       data.imageUrl = cleanImageUrl;
     }
 
@@ -47,6 +49,24 @@ export const storeToneChoices = async (userSelectedTone, aiSuggestedTone, imageU
   } catch (error) {
     console.error("Error storing tone choices:", error);
     throw error;
+  }
+};
+
+export const storeRefusal = async (imageUrl, aiResponse) => {
+  try {
+    const db = getFirestore();
+    const refusalsRef = collection(db, 'Refusals');
+    
+    const refusalData = {
+      timestamp: serverTimestamp(),
+      imageUrl: imageUrl,
+      aiResponse: aiResponse
+    };
+
+    await addDoc(refusalsRef, refusalData);
+    console.log('Refusal stored successfully');
+  } catch (error) {
+    console.error('Error storing refusal:', error);
   }
 };
 

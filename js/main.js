@@ -5,7 +5,7 @@ import { WedgeChart } from './wedge.js'; // Import the WedgeChart class
 import { FaceObject } from './faceObject.js'; // Import the base FaceObject class
 import { FaceDots } from './faceDots.js';
 import { DisplayMode } from './displayMode.js';
-import { storeToneChoices } from './firebase.js';
+import { storeToneChoices, storeRefusal } from './firebase.js';
 import { debug, isClaude, CLAUDE_MODEL, GPT_MODEL, SYSTEM_PROMPT, AI_PROMPT, DISPLAY_SETTINGS, API_ENDPOINTS, FACE_ANCHOR_POINTS, CANVAS_SETTINGS, storeImages, showDebugUI } from './config.js';
 
 // -------------------------
@@ -46,7 +46,8 @@ let capturedData = {
   apiImage: null,      // Image sent to AI (scaled)
   fullResImage: null,  // Full resolution image
   userTone: null,      // User selected tone
-  aiTone: null         // AI suggested tone
+  aiTone: null,        // AI suggested tone
+  aiResponse: null     // Full AI response text
 };
 
 // Add to your global variables
@@ -85,7 +86,8 @@ const instructions = [
           apiImage: null,
           fullResImage: null,
           userTone: null,
-          aiTone: null
+          aiTone: null,
+          aiResponse: null
         };
         checkCapturedData(); // This will disable relevant buttons
         
@@ -872,7 +874,6 @@ const displayText = (text) => {
  */
 const storeCapturedData = async () => {
   try {
-    // Only proceed with upload if storeImages is true
     let uploadedImageUrl = null;
     if (storeImages) {
       uploadedImageUrl = await uploadImageToServer(capturedData.apiImage);
@@ -883,14 +884,16 @@ const storeCapturedData = async () => {
     console.log('About to store in Firebase:', {
       userTone: capturedData.userTone,
       aiTone: capturedData.aiTone,
-      uploadedImageUrl
+      uploadedImageUrl,
+      aiResponse: capturedData.aiResponse
     });
 
-    // Store in Firebase
+    // Store in Firebase with AI response
     await storeToneChoices(
       capturedData.userTone,
       capturedData.aiTone,
-      uploadedImageUrl
+      uploadedImageUrl,
+      capturedData.aiResponse
     );
     
     console.log('Successfully stored in Firebase with image URL:', uploadedImageUrl);
@@ -913,9 +916,10 @@ const displayTextWithImage = async (text, imageUrl) => {
   const suggestedToneName = extractToneName(text);
   const currentToneData = getCurrentTone();
 
-  // Store the tones in capturedData
+  // Store the tones and AI response in capturedData
   capturedData.userTone = currentToneData?.tone?.name || null;
   capturedData.aiTone = suggestedToneName;
+  capturedData.aiResponse = text;
   
   // Check if data is complete after updating tones
   checkCapturedData();
@@ -935,7 +939,27 @@ const displayTextWithImage = async (text, imageUrl) => {
   const retryButton = document.getElementById('retry-result');
 
   resultImage.src = imageUrl;
-  resultText.textContent = text;
+  
+  // Format the display text based on whether a valid tone was found
+  if (suggestedToneName) {
+    resultText.textContent = `The fabric most suited for this person is ${suggestedToneName}`;
+    continueButton.classList.remove('hidden');
+    retryButton.classList.add('hidden');
+  } else {
+    resultText.textContent = 'Sorry, something went wrong, please retry';
+    continueButton.classList.add('hidden');
+    retryButton.classList.remove('hidden');
+    
+    // Store the refusal if we have an image URL
+    if (capturedData.apiImage) {
+      let uploadedImageUrl = null;
+      if (storeImages) {
+        uploadedImageUrl = await uploadImageToServer(capturedData.apiImage);
+      }
+      await storeRefusal(uploadedImageUrl, text);
+    }
+  }
+
   colorLine.style.backgroundColor = colorHex;
   toneName.textContent = suggestedToneName;
 
@@ -994,9 +1018,15 @@ const displayTextWithImage = async (text, imageUrl) => {
 
 // Helper function to extract the tone name from the AI's response
 const extractToneName = (text) => {
-  // Update the regex pattern to match the new response format
-  const match = text.match(/most suited for this person is (\w+)/i);
-  return match ? match[1].trim() : '';
+  // Create an array of valid tone names from the tones array
+  const validTones = tones.map(tone => tone.name.toLowerCase());
+  
+  // Look for any of the valid tone names in the text
+  const foundTone = validTones.find(tone => 
+    text.toLowerCase().includes(tone.toLowerCase())
+  );
+  
+  return foundTone ? foundTone.charAt(0).toUpperCase() + foundTone.slice(1) : '';
 };
 
 /**
@@ -1048,7 +1078,8 @@ saveButton.addEventListener('click', async () => {
       apiImage: null,
       fullResImage: null,
       userTone: null,
-      aiTone: null
+      aiTone: null,
+      aiResponse: null
     };
     checkCapturedData(); // This will disable the button again
   } catch (error) {

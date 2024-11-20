@@ -77,16 +77,6 @@ body {
   line-height: 1.4;
 }
 
-.displayed-text .dismiss-btn {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 20px;
-  color: #666;
-}
-
 /* Color line styles */
 .color-line {
   position: absolute;
@@ -128,11 +118,16 @@ body {
 
 .button-row {
   position: fixed;
-  top: 70px; /* Changed from bottom to top, positioned below send-to-ai */
+  top: 60px;
   left: 20px;
-  z-index: 1000;
-  display: flex;
+  display: none; /* Hidden by default */
   align-items: center;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.button-row.visible {
+  display: flex;
 }
 
 /* Average color circle styles */
@@ -188,7 +183,7 @@ body {
 #tone-circles {
   position: fixed;
   left: 20px;
-  top: 200px;
+  top: 240px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -324,9 +319,10 @@ body {
 /* Mode Button Styles */
 .mode-dropdown {
   position: fixed;
-  bottom: 20px;
+  top: 20px; /* Moved higher up */
   right: 20px;
-  z-index: 1001;
+  z-index: 1000;
+  display: none; /* Hidden by default */
 }
 
 .mode-button {
@@ -485,4 +481,346 @@ body {
 #tone-circles::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
   border-radius: 2px;
+}
+
+/* Add these button styles */
+#save-data {
+  position: fixed;
+  top: 120px; /* Position it below the other buttons */
+  left: 20px;
+  z-index: 1000;
+}
+
+.button-disabled {
+  background-color: #999 !important;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Generic Modal System */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  position: relative;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Modal Header */
+.modal-content h2 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 24px;
+}
+
+/* Modal Body */
+.modal-body {
+  margin-bottom: 20px;
+}
+
+.modal-body p {
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.modal-body ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.modal-body li {
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  justify-content: space-between; /* Changed from flex-end to space-between */
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Modal Buttons */
+.modal-button {
+  flex: 1; /* Make buttons take equal width */
+  min-width: 100px;
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.modal-button.secondary {
+  background-color: #666;
+}
+
+/* Result Modal Specific Styles */
+#result-modal .image-container {
+  width: 100%;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+#result-modal .captured-image {
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+}
+
+/* Media Queries */
+@media screen and (max-width: 768px) {
+  .modal {
+    padding: 10px;
+  }
+  
+  .modal-content {
+    padding: 15px;
+  }
+  
+  .modal-content h2 {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .modal-content {
+    padding: 10px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+  }
+  
+  .modal-button {
+    width: 100%;
+  }
+}
+
+/* Add these styles for the thank you modal */
+#user-tone-text,
+#ai-tone-text {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* Debug UI elements */
+.debug-ui {
+  display: none; /* Hidden by default */
+}
+
+.debug-ui.visible {
+  display: block; /* Or flex, depending on the element */
+}
+
+/* Instruction Panel */
+.instruction-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  border-radius: 10px;
+  width: auto;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+.instruction-panel.hidden {
+  transform: translate(-50%, 150%);
+  opacity: 0;
+}
+
+.instruction-text {
+  color: white;
+  margin: 0;
+  font-size: 18px;
+  flex-grow: 1;
+  text-align: center;
+  padding-right: 15px;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Update media queries for responsive design */
+@media screen and (max-width: 768px) {
+  .instruction-panel {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateX(0);
+    border-radius: 0;
+    width: 100%;
+    max-width: none;
+    padding: 12px 15px;
+    margin: 0;
+  }
+
+  .instruction-panel.hidden {
+    transform: translateY(100%);
+  }
+
+  .instruction-text {
+    font-size: 16px;
+    padding-right: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* Add a class to show the UI elements when needed */
+.mode-dropdown.visible {
+  display: block;
+}
+
+/* Also hide tone circles by default */
+#tone-circles {
+  display: none;
+}
+
+#tone-circles.visible {
+  display: flex; /* or whatever your original display value was */
+}
+
+/* Oval styles */
+.oval {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 560px;
+  height: 700px;
+  border: 3px solid white;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  z-index: 999;
+  pointer-events: none;
+  margin-top: -40px;
+}
+
+.oval.in-position {
+  background-color: rgba(0, 255, 0, 0.1);
+  border-color: rgba(0, 255, 0, 0.8);
+}
+
+.oval.hidden {
+  display: none;
+}
+
+/* Add responsive styles for the oval */
+@media screen and (max-width: 480px), (max-height: 800px) {
+  .oval {
+    width: min(240px, 80vw);
+    height: min(320px, 70vh);
+    margin-top: -20px;
+  }
+}
+
+/* Add these styles for the new oval instruction modal */
+#oval-instruction-modal {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+#oval-instruction-modal .modal-content {
+  max-width: 300px;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 25px 20px;
+}
+
+#oval-instruction-modal h2 {
+  font-size: 20px;
+  margin: 15px 0;
+  color: #333;
+}
+
+#oval-instruction-modal .instruction-icon {
+  color: #FF0000;
+  font-size: 36px;
+  margin-bottom: 15px;
+}
+
+#oval-instruction-modal .modal-body {
+  margin: 20px 0;
+}
+
+#oval-instruction-modal .modal-body p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+#oval-instruction-modal .modal-body ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+#oval-instruction-modal .modal-body li {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 12px;
+  padding-left: 20px;
+  position: relative;
+}
+
+#oval-instruction-modal .modal-body li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #333;
+}
+
+#oval-instruction-modal .modal-footer {
+  margin-top: 20px;
+}
+
+#oval-instruction-modal .modal-button {
+  background-color: #FF0000;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 30px;
+  font-size: 16px;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#oval-instruction-modal .modal-button:hover {
+  background-color: #E60000;
 }

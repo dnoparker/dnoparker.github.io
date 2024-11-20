@@ -40,6 +40,8 @@
 <body>
   <!-- Container for AR content -->
   <div id="container" style="width: 100%; height: 100%;"></div>
+  <!-- Oval indicator -->
+  <div id="oval" class="oval"></div>
   
   <!-- Hidden video element for webcam feed -->
   <video id="webcam" autoplay playsinline style="display: none;"></video>
@@ -48,15 +50,18 @@
   <img id="captured-image" style="display:none; position: absolute; top: 10px; left: 10px; border: 2px solid black;" />
   
   <!-- Button to send data to AI -->
-  <button id="send-to-ai" class="button">Send to AI</button>
+  <button id="send-to-ai" class="button debug-ui">Send to AI</button>
   
   <!-- Button row for additional actions -->
-  <div class="button-row">
+  <div class="button-row debug-ui">
     <!-- Button to get average colors -->
     <button id="get-average-colors" class="button">Get Average Colors</button>
     <!-- Div to display average color -->
     <div id="average-color-circle"></div>
   </div>
+  
+  <!-- Save button -->
+  <button id="save-data" class="button button-disabled debug-ui" disabled>Save</button>
   
   <!-- Loading animation -->
   <div id="loading-animation" class="loading-hidden">
@@ -83,6 +88,84 @@
         <div class="mode-option-circle"></div>
         <span class="mode-option-text">Dots</span>
       </a>
+    </div>
+  </div>
+  
+  <!-- Update the terms modal structure -->
+  <div id="terms-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Terms and Conditions</h2>
+      <div class="modal-body">
+        <p>Before using this application, please note:</p>
+        <ul>
+          <li>This app will access your device's camera</li>
+          <li>Your facial data will be processed to determine skin tone</li>
+          <li>Images may be temporarily stored for processing</li>
+          <li>By clicking "Accept", you agree to these terms</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="button modal-button" id="accept-terms">Accept</button>
+        <button class="button modal-button secondary" id="decline-terms">Decline</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Update your result-modal -->
+  <div id="result-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="image-container">
+        <img id="result-image" class="captured-image" src="" alt="Captured face">
+        <div id="result-color-line" class="color-line">
+          <div id="result-tone-name" class="tone-name"></div>
+        </div>
+      </div>
+      <p id="result-text" class="result-text"></p>
+      <div class="modal-footer">
+        <button class="button modal-button" id="submit-result">Continue</button>
+        <button class="button modal-button secondary" id="retry-result">Retry</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Simplified thank you modal without buttons -->
+  <div id="thank-you-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Thank You!</h2>
+      <div class="modal-body">
+        <p>You selected <span id="user-tone-text">tone</span></p>
+        <p>AI suggested <span id="ai-tone-text">tone</span></p>
+        <p>Your image has been collected.</p>
+        <p>Thank you for participating in this research!</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add this before the closing body tag -->
+  <div id="instruction-panel" class="instruction-panel hidden">
+    <p id="instruction-text" class="instruction-text">Position your face in the oval and hold still</p>
+    <button id="instruction-next" class="button instruction-button">Next</button>
+  </div>
+  
+  <!-- Add this new modal before the closing body tag -->
+  <div id="oval-instruction-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="instruction-icon">
+        <i class="fas fa-bullseye"></i>
+      </div>
+      <h2>Position Your Face</h2>
+      <div class="modal-body">
+        <p>For best results:</p>
+        <ul>
+          <li>Center your face within the oval</li>
+          <li>Keep your face straight and level</li>
+          <li>Ensure good lighting on your face</li>
+          <li>Hold still when the oval turns green</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button id="understand-oval" class="button modal-button">I Understand</button>
+      </div>
     </div>
   </div>
 </body>

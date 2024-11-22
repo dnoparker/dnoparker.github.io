@@ -77,8 +77,8 @@ const instructions = [
         await storeCapturedData();
         
         // Show the thank you modal with the selected tones
-        userToneText.textContent = capturedData.userTone || 'no tone';
-        aiToneText.textContent = capturedData.aiTone || 'no tone';
+        userToneText.textContent = capturedData.userTone.toUpperCase()  || 'no tone';
+        aiToneText.textContent = capturedData.aiTone.toUpperCase() || 'no tone';
         thankYouModal.classList.remove('hidden');
         
         // Clear the captured data after successful save
@@ -1142,6 +1142,11 @@ document.addEventListener('DOMContentLoaded', () => {
   declineTermsButton.addEventListener('click', () => {
     // You might want to redirect or show a message
     alert('You must accept the terms to use this application.');
+  });
+
+  // Add this to your DOMContentLoaded event listener or initialization code
+  document.getElementById('start-over').addEventListener('click', () => {
+    window.location.reload();
   });
 });
 

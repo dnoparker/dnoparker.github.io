@@ -128,15 +128,24 @@
     </div>
   </div>
   
-  <!-- Simplified thank you modal without buttons -->
+  <!-- Simplified thank you modal -->
   <div id="thank-you-modal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Thank You!</h2>
+    <div class="modal-content thank-you-content">
       <div class="modal-body">
-        <p>You selected <span id="user-tone-text">tone</span></p>
-        <p>AI suggested <span id="ai-tone-text">tone</span></p>
-        <p>Your image has been collected.</p>
-        <p>Thank you for participating in this research!</p>
+        <div class="tone-comparison">
+          <div class="tone-selection">
+            <p>You selected</p>
+            <span id="user-tone-text">tone</span>
+          </div>
+          <div class="tone-selection">
+            <p>AI suggested</p>
+            <span id="ai-tone-text">tone</span>
+          </div>
+        </div>
+        <p class="thank-you-message">Thank you for participating in this research for Shades. Your response has been collected.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="start-over" class="button modal-button">Start Over</button>
       </div>
     </div>
   </div>
@@ -153,7 +162,6 @@
       <div class="instruction-icon">
         <i class="fas fa-bullseye"></i>
       </div>
-      <h2>Position Your Face</h2>
       <div class="modal-body">
         <p>For best results:</p>
         <ul>
@@ -164,7 +172,7 @@
         </ul>
       </div>
       <div class="modal-footer">
-        <button id="understand-oval" class="button modal-button">I Understand</button>
+        <button id="understand-oval" class="button modal-button">Begin</button>
       </div>
     </div>
   </div>

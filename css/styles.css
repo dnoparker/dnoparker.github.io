@@ -1,7 +1,12 @@
+@import 'components/oval.css';
+@import 'components/instructions.css';
+
 /* Root variables */
 :root {
-  --primary-color: #e43636;
-  --secondary-color: #ff6464;
+  --primary-color: #8B6B4A;
+  --secondary-color: #4A4A4A;
+  --accent-color: #D4B78F;
+  --font-family: 'Roboto', Arial, sans-serif;
 }
 
 /* Global styles */
@@ -23,7 +28,7 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: var(--font-family);
   user-select: none;
 }
 
@@ -93,15 +98,18 @@ body {
 .button {
   background-color: var(--primary-color);
   color: white;
-  padding: 10px 20px;
+  padding: 12px 25px;
   border: none;
-  border-radius: 20px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
 }
 
 .button:hover {
-  background-color: var(--primary-color);
+  background-color: var(--accent-color);
 }
 
 #send-to-ai {
@@ -156,7 +164,7 @@ body {
 .circle {
   width: 20px;
   height: 20px;
-  background-color: var(--secondary-color);
+  background-color: var(--primary-color);
   border-radius: 50%;
   display: inline-block;
   margin: 0 5px;
@@ -211,6 +219,8 @@ body {
   border-radius: 25px; /* Added for capsule shape */
   transition: background-color 0.3s ease; /* Smooth transition for background */
   margin-top: 20px; /* Add space above each container for the label */
+  background-color: rgba(139, 107, 74, 0.1);
+  border: 1px solid rgba(139, 107, 74, 0.2);
 }
 
 .tone-circle {
@@ -227,6 +237,7 @@ body {
 .tone-name {
   margin: 0;
   font-size: 14px;
+  font-family: var(--font-family);
   color: white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
@@ -237,7 +248,7 @@ body {
 }
 
 .tone-circle-container.selected .tone-circle {
-  border-color: rgb(99, 255, 68);
+  border-color: white
 }
 
 .tone-circle-container:active,
@@ -254,22 +265,31 @@ body {
 
 /* Add new AI suggested capsule styles */
 .tone-circle-container.ai-suggested {
-  background-color: rgba(228, 54, 54, 0.15); /* Semi-transparent primary color */
+  background-color: rgba(139, 107, 74, 0.5);
+  border: 1px solid var(--primary-color);
 }
 
 .tone-circle-container.ai-suggested::before {
   content: 'AI Suggested';
   position: absolute;
   top: -20px;
-  left: 50%; /* Change from left: 10px to center alignment */
-  transform: translateX(-50%); /* Center the label */
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 12px;
-  color: var(--primary-color);
-  background-color: rgba(228, 54, 54, 0.1);
-  padding: 2px 8px;
+  color: white;
+  background-color: var(--primary-color);
+  padding: 3px 10px;
   border-radius: 12px;
   white-space: nowrap;
-  z-index: 1; /* Ensure label appears above other elements */
+  z-index: 1;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* When both AI and user select the same tone */
+.tone-circle-container.ai-suggested.user-selected::before {
+  content: 'User + AI Selected';
 }
 
 /* Controls styles */
@@ -332,13 +352,13 @@ body {
 .mode-button {
   width: 60px;
   height: 60px;
-  background-color: rgba(183, 154, 113, 0.9);
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 50%;
   cursor: pointer;
   padding: 0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(139, 107, 74, 0.3);
   transition: all 0.3s ease;
   position: relative;
   margin-bottom: 25px; /* Add margin to create space for the text */
@@ -350,6 +370,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   font-size: 14px;
+  font-family: var(--font-family);
   color: white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   width: 100%; /* Ensure text has enough width */
@@ -395,7 +416,7 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: white;
+  background-color: var(--primary-color);
   margin-bottom: 5px;
   transition: all 0.2s ease;
   border: 2px solid transparent;
@@ -407,12 +428,13 @@ body {
 }
 
 .mode-option.selected .mode-option-circle {
-  border-color: rgb(255, 107, 107);
+  border-color: white;
   scale: 1.1;
 }
 
 .mode-option-text {
   font-size: 12px;
+  font-family: var(--font-family);
   color: white;
 }
 
@@ -522,10 +544,10 @@ body {
 }
 
 .modal-content {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  padding: 20px;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 30px;
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
@@ -537,8 +559,11 @@ body {
 /* Modal Header */
 .modal-content h2 {
   margin: 0 0 20px 0;
-  color: #333;
+  font-family: var(--font-family);
+  color: var(--primary-color);
   font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 /* Modal Body */
@@ -550,6 +575,7 @@ body {
   margin: 0 0 15px 0;
   line-height: 1.5;
   text-align: center;
+  font-family: var(--font-family);
 }
 
 .modal-body ul {
@@ -560,6 +586,7 @@ body {
 .modal-body li {
   margin-bottom: 10px;
   line-height: 1.4;
+  font-family: var(--font-family);
 }
 
 /* Modal Footer */
@@ -576,6 +603,7 @@ body {
   min-width: 100px;
   padding: 10px 20px;
   font-size: 14px;
+  font-family: var(--font-family);
 }
 
 .modal-button.secondary {
@@ -641,69 +669,6 @@ body {
   display: block; /* Or flex, depending on the element */
 }
 
-/* Instruction Panel */
-.instruction-panel {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.9);
-  padding: 15px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1000;
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  border-radius: 10px;
-  width: auto;
-  max-width: 600px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  box-sizing: border-box;
-}
-
-.instruction-panel.hidden {
-  transform: translate(-50%, 150%);
-  opacity: 0;
-}
-
-.instruction-text {
-  color: white;
-  margin: 0;
-  font-size: 18px;
-  flex-grow: 1;
-  text-align: center;
-  padding-right: 15px;
-  line-height: 1.4;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
-
-/* Update media queries for responsive design */
-@media screen and (max-width: 768px) {
-  .instruction-panel {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    transform: translateX(0);
-    border-radius: 0;
-    width: 100%;
-    max-width: none;
-    padding: 12px 15px;
-    margin: 0;
-  }
-
-  .instruction-panel.hidden {
-    transform: translateY(100%);
-  }
-
-  .instruction-text {
-    font-size: 16px;
-    padding-right: 10px;
-    flex: 1;
-    min-width: 0;
-  }
-}
-
 /* Add a class to show the UI elements when needed */
 .mode-dropdown.visible {
   display: block;
@@ -716,122 +681,6 @@ body {
 
 #tone-circles.visible {
   display: flex; /* or whatever your original display value was */
-}
-
-/* Oval styles */
-.oval {
-  position: fixed;
-  top: 45%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 560px;
-  height: 700px;
-  border: 3px solid white;
-  border-radius: 50%;
-  transition: background-color 0.3s ease;
-  z-index: 999;
-  pointer-events: none;
-  margin-top: -40px;
-}
-
-.oval.in-position {
-  background-color: rgba(0, 255, 0, 0.1);
-  border-color: rgba(0, 255, 0, 0.8);
-}
-
-.oval.hidden {
-  display: none;
-}
-
-/* Add responsive styles for the oval */
-@media screen and (max-width: 480px), (max-height: 800px) {
-  .oval {
-    width: min(240px, 80vw);
-    height: min(320px, 70vh);
-    margin-top: -20px;
-  }
-}
-
-/* Add these styles for the new oval instruction modal */
-#oval-instruction-modal {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-#oval-instruction-modal .modal-content {
-  max-width: 300px;
-  text-align: center;
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 15px;
-  padding: 25px 20px;
-}
-
-#oval-instruction-modal h2 {
-  font-size: 20px;
-  margin: 15px 0;
-  color: #333;
-}
-
-#oval-instruction-modal .instruction-icon {
-  color: var(--primary-color);
-  font-size: 36px;
-  margin-bottom: 15px;
-}
-
-#oval-instruction-modal .modal-body {
-  margin: 20px 0;
-}
-
-#oval-instruction-modal .modal-body p {
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 15px;
-}
-
-#oval-instruction-modal .modal-body ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  text-align: left;
-}
-
-#oval-instruction-modal .modal-body li {
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 12px;
-  padding-left: 20px;
-  position: relative;
-}
-
-#oval-instruction-modal .modal-body li:before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  color: #333;
-}
-
-#oval-instruction-modal .modal-footer {
-  margin-top: 20px;
-}
-
-#oval-instruction-modal .modal-button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 25px;
-  padding: 12px 30px;
-  font-size: 16px;
-  width: 100%;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-#oval-instruction-modal .modal-button:hover {
-  background-color: var(--primary-color);
-}
-
-/* Add these styles to ensure proper button visibility */
-.modal-button.hidden {
-  display: none;
 }
 
 /* Thank You Modal Specific Styles */
@@ -891,4 +740,53 @@ body {
 .thank-you-message {
   color: #666;
   text-align: left;
+}
+
+/* Add to your existing button styles */
+.instruction-button.button-disabled {
+  background-color: #999 !important;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Add after the existing .tone-circle-container.ai-suggested styles (around line 270) */
+.tone-circle-container.user-selected {
+  background-color: rgba(139, 107, 74, 0.5);
+  border: 1px solid var(--primary-color);
+}
+
+.tone-circle-container.user-selected::before {
+  content: 'User Selected';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: white;
+  background-color: var(--primary-color);
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+  z-index: 1;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tone-circle-container.matching::after {
+  content: 'Match! ⭐';
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: white;
+  background-color: #28a745;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+  z-index: 2;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }

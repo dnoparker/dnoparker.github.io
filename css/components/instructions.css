@@ -1,0 +1,69 @@
+/* Instruction Panel */
+.instruction-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  border-radius: 10px;
+  width: auto;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+.instruction-panel.hidden {
+  transform: translate(-50%, 150%);
+  opacity: 0;
+}
+
+.instruction-text {
+  color: var(--secondary-color);
+  margin: 0;
+  font-size: 18px;
+  flex-grow: 1;
+  text-align: center;
+  padding-right: 15px;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  font-family: var(--font-family);
+}
+
+.instruction-button.button-disabled {
+  background-color: #999 !important;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Responsive styles for instructions */
+@media screen and (max-width: 768px) {
+  .instruction-panel {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateX(0);
+    border-radius: 0;
+    width: 100%;
+    max-width: none;
+    padding: 12px 15px;
+    margin: 0;
+  }
+
+  .instruction-panel.hidden {
+    transform: translateY(100%);
+  }
+
+  .instruction-text {
+    font-size: 16px;
+    padding-right: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+} 

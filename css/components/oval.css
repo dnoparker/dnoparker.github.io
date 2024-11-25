@@ -1,0 +1,125 @@
+/* Oval styles */
+.oval {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(60vw, 50vh, 500px);
+  height: calc(min(60vw, 50vh, 500px) * 1.25);
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.oval.in-position {
+  background-color: rgba(0, 255, 0, 0.1);
+  border-color: rgba(0, 255, 0, 0.8);
+}
+
+.oval.hidden {
+  display: none;
+}
+
+/* Oval instruction modal styles */
+#oval-instruction-modal {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+#oval-instruction-modal .modal-content {
+  max-width: 300px;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 25px 20px;
+}
+
+#oval-instruction-modal h2 {
+  font-size: 20px;
+  margin: 15px 0;
+  color: #333;
+  font-family: var(--font-family);
+}
+
+#oval-instruction-modal .instruction-icon {
+  color: var(--primary-color);
+  font-size: 36px;
+  margin-bottom: 15px;
+}
+
+#oval-instruction-modal .modal-body {
+  margin: 20px 0;
+}
+
+#oval-instruction-modal .modal-body p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 15px;
+  font-family: var(--font-family);
+}
+
+#oval-instruction-modal .modal-body ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+#oval-instruction-modal .modal-body li {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 12px;
+  padding-left: 20px;
+  position: relative;
+  font-family: var(--font-family);
+}
+
+#oval-instruction-modal .modal-body li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #333;
+}
+
+#oval-instruction-modal .modal-footer {
+  margin-top: 20px;
+}
+
+#oval-instruction-modal .modal-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 25px;
+  font-size: 16px;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  font-family: var(--font-family);
+}
+
+#oval-instruction-modal .modal-button:hover {
+  background-color: var(--accent-color);
+}
+
+/* Responsive Adjustments */
+
+/* For tablets and small desktops */
+@media (max-width: 800px) {
+  .oval {
+    width: min(70vw, 50vh, 400px);
+    height: calc(min(70vw, 50vh, 400px) * 1.25);
+  }
+}
+
+/* For landscape orientation with limited height */
+@media (orientation: landscape) and (max-height: 600px) {
+  .oval {
+    width: min(40vw, 30vh, 250px);
+    height: calc(min(40vw, 30vh, 250px) * 1.25);
+  }
+} 

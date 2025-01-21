@@ -36,8 +36,16 @@
   <!-- Remove any existing Firebase script tags and add this instead -->
   <script type="module" src="js/firebase.js"></script>
   <script>
-    // Check if user came from index.html
-    if (!document.referrer.includes('index.html')) {
+    // Referrer Validation
+    const referrer = document.referrer;
+    const origin = window.location.origin;
+
+    const validReferrers = [
+      `${origin}/index.html`,
+      `${origin}/`
+    ];
+
+    if (!validReferrers.some(validReferrer => referrer.startsWith(validReferrer))) {
       window.location.href = 'index.html';
     }
   </script>

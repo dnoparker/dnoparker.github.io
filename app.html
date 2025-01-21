@@ -36,11 +36,16 @@
   <!-- Remove any existing Firebase script tags and add this instead -->
   <script type="module" src="js/firebase.js"></script>
   <script>
-    // Referrer Validation
+    // Check if user came from index.html or the root domain
     const referrer = document.referrer;
-    const domain = 'dnoparker.github.io';
+    const origin = window.location.origin;
 
-    if (!referrer.includes(domain)) {
+    const validReferrers = [
+      `${origin}/index.html`,
+      `${origin}/`
+    ];
+
+    if (!validReferrers.some(validReferrer => referrer.startsWith(validReferrer))) {
       window.location.href = 'index.html';
     }
   </script>

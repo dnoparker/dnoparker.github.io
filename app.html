@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Meta tags for character set and viewport settings -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Link to Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <!-- Page title -->
+  <title>Shades Skin Tone Detection</title>
+  
+  <!-- Import map for module imports -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+      "mindar-face-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-three.prod.js",
+      "@tweenjs/tween.js": "https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"
+    }
+  }
+  </script>
+  
+  <!-- Main JavaScript file -->
+  <script type="module" src="./js/main.js"></script>
+  
+  <!-- Main CSS file -->
+  <link rel="stylesheet" href="./css/styles.css">
+  
+  <!-- Google Fonts for Roboto -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Remove any existing Firebase script tags and add this instead -->
+  <script type="module" src="js/firebase.js"></script>
+  <script>
+    // Check if user came from index.html
+    if (!document.referrer.includes('index.html')) {
+      window.location.href = 'index.html';
+    }
+  </script>
+</head>
+
+<body>
+  <!-- Container for AR content -->
+  <div id="container" style="width: 100%; height: 100%;"></div>
+  <!-- Oval indicator -->
+  <div id="oval" class="oval"></div>
+  
+  <!-- Hidden video element for webcam feed -->
+  <video id="webcam" autoplay playsinline style="display: none;"></video>
+  
+  <!-- Hidden image element for captured image -->
+  <img id="captured-image" style="display:none; position: absolute; top: 10px; left: 10px; border: 2px solid black;" />
+  
+  <!-- Button to send data to AI -->
+  <button id="send-to-ai" class="button debug-ui">Send to AI</button>
+  
+  <!-- Button row for additional actions -->
+  <div class="button-row debug-ui">
+    <!-- Button to get average colors -->
+    <button id="get-average-colors" class="button">Get Average Colors</button>
+    <!-- Div to display average color -->
+    <div id="average-color-circle"></div>
+  </div>
+  
+  <!-- Save button -->
+  <button id="save-data" class="button button-disabled debug-ui" disabled>Save</button>
+  
+  <!-- Loading animation -->
+  <div id="loading-animation" class="loading-hidden">
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+  </div>
+  
+  <!-- Add this new div for the tone circles -->
+  <div id="tone-circles"></div>
+  
+  <!-- Replace the existing mode-dropdown div with this -->
+  <!-- <div class="mode-dropdown">
+    <button id="mode-button" class="mode-button">
+      <span class="mode-button-text">Mode</span>
+    </button>
+    <div class="mode-dropdown-content">
+      <a href="#" class="mode-option" data-mode="wedge">
+        <div class="mode-option-circle"></div>
+        <span class="mode-option-text">Wedge</span>
+      </a>
+      <a href="#" class="mode-option" data-mode="dots">
+        <div class="mode-option-circle"></div>
+        <span class="mode-option-text">Dots</span>
+      </a>
+    </div>
+  </div> -->
+  
+  <!-- Update your result-modal -->
+  <div id="result-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="image-container">
+        <img id="result-image" class="captured-image" src="" alt="Captured face">
+        <div id="result-color-line" class="color-line">
+          <div id="result-tone-name" class="tone-name"></div>
+        </div>
+      </div>
+      <p id="result-text" class="result-text"></p>
+      <div class="modal-footer">
+        <button class="button modal-button" id="submit-result">Continue</button>
+        <button class="button modal-button secondary" id="retry-result">Retry</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Simplified thank you modal -->
+  <div id="thank-you-modal" class="modal hidden">
+    <div class="modal-content thank-you-content">
+      <div class="modal-body">
+        <div class="tone-comparison">
+          <div class="tone-selection">
+            <p>AI suggested</p>
+            <span id="ai-tone-text">tone</span>
+          </div>
+          <div class="tone-selection">
+            <p>You selected</p>
+            <span id="user-tone-text">tone</span>
+          </div>
+        </div>
+        <p class="thank-you-message">Thank you for using Find Your Shade! We hope you found the perfect shade for you. Now you can head back to the store and look for your new dancewear.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="start-over" class="button modal-button">Back to Store</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add this before the closing body tag -->
+  <div id="instruction-panel" class="instruction-panel hidden">
+    <p id="instruction-text" class="instruction-text">Position your face in the oval and hold still</p>
+    <button id="instruction-next" class="button instruction-button">Next</button>
+  </div>
+  
+  <!-- Add this new modal before the closing body tag -->
+  <div id="oval-instruction-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="instruction-icon">
+        <i class="fas fa-bullseye"></i>
+      </div>
+      <div class="modal-body">
+        <p>For best results:</p>
+        <ul>
+          <li>Center your face within the oval</li>
+          <li>Keep your face straight and level</li>
+          <li>Ensure good lighting on your face</li>
+          <li>Hold still when the oval turns green</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button id="understand-oval" class="button modal-button">Begin</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add this with the other modals -->
+  <div id="confirm-tone-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="tone-confirmation">
+        <div class="tone-preview">
+          <div id="selected-tone-circle" class="tone-circle"></div>
+          <div class="tone-info">
+            <p>You selected</p>
+            <p class="tone-name"><span id="selected-tone-name"></span></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="confirm-tone-btn" class="button modal-button">Confirm</button>
+          <button id="cancel-tone-btn" class="button modal-button secondary">Change Selection</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add countdown timer structure -->
+  <div id="countdown-overlay" class="countdown-overlay">
+    <div class="countdown-capsule">
+      <div class="keep-still-text">Keep Still</div>
+      <div class="capsule-divider"></div>
+      <div id="countdown-number" class="countdown-number"></div>
+    </div>
+  </div>
+</body>
+
+</html>

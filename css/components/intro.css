@@ -1,0 +1,266 @@
+/* background */
+body {
+  background-color: #ebebe6;
+}
+
+/* Intro container */
+.intro-content {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 100px; /* Leave space for button navbar */
+  background-color: #fafaf9;
+  border-radius: 30px;
+  z-index: 1000;
+  text-align: center;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevent container scroll */
+}
+
+/* Desktop/landscape layout */
+@media screen and (min-width: 768px) and (orientation: landscape) {
+  .intro-content {
+    left: 50%;
+    width: 700px;
+    transform: translateX(-50%);
+  }
+}
+
+/* Common text styles */
+.intro-content h1 {
+  color: var(--primary-color);
+  font-family: var(--font-family);
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+}
+
+.intro-content p,
+.intro-content li {
+  color: var(--secondary-color);
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.6;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.intro-content p {
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+/* Terms list */
+.terms-list {
+  text-align: left;
+  margin: 20px 0;
+  padding-left: 20px;
+}
+
+.terms-list li {
+  margin-bottom: 20px;
+  color: var(--secondary-color);
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.terms-list li strong {
+  color: var(--primary-color);
+  display: block;
+  margin-bottom: 5px;
+  font-size: 17px;
+}
+
+.terms-footer {
+  margin-top: 30px;
+  font-style: italic;
+  color: var(--secondary-color);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* Step handling */
+.intro-step {
+  display: none;
+  position: relative;
+  height: 100%;
+  flex: 1;
+}
+
+.intro-step.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable content area */
+.intro-step-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Button navbar */
+.intro-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fafaf9;
+  border-radius: 30px;
+  padding: 15px 40px;
+  z-index: 1001;
+}
+
+/* Single button container */
+#intro-nav-step {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Double button container */
+#terms-nav-step,
+#tutorial-nav-step {
+  display: none;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  gap: 10px;
+}
+
+/* Button styles */
+.intro-nav button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: var(--font-family);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Single button width */
+#intro-nav-step button {
+  width: 100%;
+  max-width: 200px;
+}
+
+/* Double button widths */
+#terms-nav-step button,
+#tutorial-nav-step button {
+  width: calc(50% - 5px);
+}
+
+.intro-nav button:hover {
+  background-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+.intro-nav button.secondary {
+  background-color: var(--secondary-color);
+  order: -1;
+}
+
+/* Add after the common text styles */
+.intro-image {
+  width: 100%;
+  margin: 0 0 30px 0;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.intro-image img {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  border-radius: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Make sure images fade in when switching steps */
+.intro-step.active .intro-image img {
+  animation-play-state: running;
+}
+
+/* Add fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add after the existing button styles */
+#tutorial-nav-step {
+  display: none;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+#tutorial-nav-step button {
+  width: calc(50% - 5px);
+}
+
+/* Update the intro-image styles to add spacing between multiple images */
+.intro-image + .intro-image {
+  margin-top: 30px;
+}
+
+/* Optional: Add some margin between buttons in two-button layouts */
+.intro-nav button + button {
+  margin-left: 10px;
+}
+
+.intro-tone-circles {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.intro-tone-circle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;  /* Prevent any interaction on the container too */
+}
+
+.intro-tone-circle {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;  /* Prevent any interaction */
+  user-select: none;    /* Prevent selection */
+  transform: none !important; /* Prevent any transform */
+}
+
+.intro-tone-label {
+  font-family: var(--font-family);
+  font-size: 14px;
+  color: var(--secondary-color);
+}

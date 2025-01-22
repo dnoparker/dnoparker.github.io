@@ -1,19 +1,23 @@
 const tones = [
     {
       name: "PEARL",
-      hex: "#DEB99C"
+      hex: "#deba9d",
+      texture: "./images/textures/pearl_texture.png"
     },
     {
       name: "UDAY",
-      hex: "#AD846B"
+      hex: "#ad856b",
+      texture: "./images/textures/uday_texture.png"
     },
     {
       name: "RAVEN",
-      hex: "#967759"
+      hex: "#947a5e",
+      texture: "./images/textures/raven_texture.png"
     },
     {
       name: "BOJANGLES",
-      hex: "#5E4E3E"
+      hex: "#5d4b3c",
+      texture: "./images/textures/bojangles_texture.png"
     }
   ];
 
@@ -29,7 +33,7 @@ function createToneCircles() {
 
     const circle = document.createElement('div');
     circle.className = 'tone-circle';
-    circle.style.backgroundColor = tone.hex;
+    circle.style.backgroundImage = `url(${tone.texture})`;
     circle.title = tone.name;
 
     const nameLabel = document.createElement('span');

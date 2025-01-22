@@ -17,20 +17,31 @@ export class WedgeChart extends FaceObject {
         this.cornerRadius = 0.065;
         this.minOuterRadius = 0.8;
         this.maxOuterRadius = 1.1;
-        this.sliceCount = tones.length; // Use the number of tones instead of a fixed value
+        this.sliceCount = tones.length;
 
         // Initialize rotation
         this.rotationZ = 3.841592638331002;
         this.group.rotation.z = this.rotationZ;
-
-        // Bind the new scroll method
-        this.onScroll = this.onScroll.bind(this);
 
         // Initialize properties specific to WedgeChart
         this.slices = [];
         this.sliceValues = Array(this.sliceCount).fill(100 / this.sliceCount);
         this.sliceGeometries = [];
         this.currentHeights = Array(this.sliceCount).fill(1);
+
+        // Load textures
+        this.textureLoader = new THREE.TextureLoader();
+        this.textures = tones.map(tone => {
+            const texture = this.textureLoader.load(tone.texture);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(2, 2); // Adjust repeat values as needed
+            texture.encoding = THREE.sRGBEncoding;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = false; // Disable mipmaps for clearer texture
+            return texture;
+        });
 
         // Raycaster setup
         this.raycaster = new THREE.Raycaster();
@@ -117,9 +128,26 @@ export class WedgeChart extends FaceObject {
 
         this.sliceValues.forEach((value, index) => {
             const angle = (value / total) * Math.PI;
-            const dynamicOuterRadius = minOuterRadius; // Default to minOuterRadius
+            const dynamicOuterRadius = minOuterRadius;
             const geometry = new THREE.BufferGeometry();
-            const material = new THREE.MeshBasicMaterial({ color: this.colors[index], side: THREE.DoubleSide });
+            
+            // Create material with texture
+            const material = new THREE.MeshBasicMaterial({
+                map: this.textures[index],
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 1.0,
+                depthWrite: true,
+                depthTest: true,
+                color: 0xffffff // Set to white to show texture at full intensity
+            });
+
+            // Ensure texture settings preserve color
+            material.map.encoding = THREE.sRGBEncoding;
+            material.map.minFilter = THREE.LinearFilter;
+            material.map.magFilter = THREE.LinearFilter;
+
+            // Create custom UV coordinates for the texture projection
             const slice = new THREE.Mesh(geometry, material);
 
             this.updateSliceGeometry(geometry, startAngle, startAngle + angle, 0.5, dynamicOuterRadius, cornerRadiusFactor);
@@ -134,6 +162,7 @@ export class WedgeChart extends FaceObject {
     }
 
     updatePieChart() {
+        const currentRotation = this.rotationZ; // Preserve current rotation
         const total = this.sliceValues.reduce((acc, val) => acc + val, 0);
         const gapSize = this.gapSize;
         const cornerRadiusFactor = this.cornerRadius;
@@ -158,6 +187,8 @@ export class WedgeChart extends FaceObject {
 
             startAngle += angle;
         });
+
+        this.group.rotation.z = currentRotation; // Reapply preserved rotation
     }
 
     updateSliceGeometry(geometry, startAngle, endAngle, innerRadius, outerRadius, cornerRadiusFactor) {
@@ -207,11 +238,31 @@ export class WedgeChart extends FaceObject {
             s1.x, s1.y
         );
 
-
         const shapeGeometry = new THREE.ShapeGeometry(shape);
+        
+        // Create a matrix to transform UVs
+        const matrix = new THREE.Matrix3();
+        matrix.setUvTransform(0, 0, 1, 1, 0, 0.5, 0.5);
+
+        // Get the UV attribute from the shape geometry
+        const uvAttribute = shapeGeometry.getAttribute('uv');
+        const positions = shapeGeometry.getAttribute('position');
+
+        // Create new UV coordinates based on position
+        const uvs = new Float32Array(uvAttribute.count * 2);
+        for (let i = 0; i < positions.count; i++) {
+            const x = positions.getX(i);
+            const y = positions.getY(i);
+            
+            // Convert position to UV coordinates
+            uvs[i * 2] = (x + 1) / 2;     // U coordinate
+            uvs[i * 2 + 1] = (y + 1) / 2; // V coordinate
+        }
+
+        // Set the new UV coordinates
+        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
         geometry.setAttribute('position', shapeGeometry.getAttribute('position'));
         geometry.setAttribute('normal', shapeGeometry.getAttribute('normal'));
-        geometry.setAttribute('uv', shapeGeometry.getAttribute('uv'));
         geometry.index = shapeGeometry.index;
         geometry.computeBoundingSphere();
     }
@@ -321,36 +372,9 @@ export class WedgeChart extends FaceObject {
     }
 
     setupEventListeners() {
-        // Existing event listeners
+        // Only keep click event listener
         document.getElementById('container').addEventListener('click', this.onClick, false);
         console.log("Click event listener added to container");
-
-        // Add scroll event listener
-        window.addEventListener('wheel', this.onScroll, false);
-        console.log("Scroll event listener added to window");
-    }
-
-    onScroll(event) {
-        // Adjust rotation based on scroll
-        const scrollSensitivity = 0.001;
-        this.rotationZ += event.deltaY * scrollSensitivity;
-
-        // Allow rotation to go all the way round
-        this.rotationZ = this.rotationZ % (2 * Math.PI);
-
-        // Apply rotation
-        this.group.rotation.z = this.rotationZ;
-
-        // Log the rotation value
-        console.log("Rotation Z:", this.rotationZ);
-    }
-
-    debounce(func, wait) {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
     }
 
     /**
@@ -489,7 +513,6 @@ export class WedgeChart extends FaceObject {
 
         // Remove event listeners
         document.getElementById('container').removeEventListener('click', this.onClick);
-        window.removeEventListener('wheel', this.onScroll);
 
         // Dispose of geometries and materials
         this.slices.forEach(slice => {
@@ -515,5 +538,21 @@ export class WedgeChart extends FaceObject {
     // Add new method to set default tone
     setDefaultTone(index) {
         this.animateSlicesToNewDistribution(index);
+    }
+
+    // Add this new method to WedgeChart class
+    animateRotation(targetRotation) {
+        if (this.rotationTween) {
+            this.rotationTween.stop();
+        }
+
+        this.rotationTween = new TWEEN.Tween({ rotation: this.rotationZ })
+            .to({ rotation: targetRotation }, 500) // 500ms duration
+            .easing(TWEEN.Easing.Quadratic.Out)
+            .onUpdate(({ rotation }) => {
+                this.rotationZ = rotation;
+                this.group.rotation.z = rotation;
+            })
+            .start();
     }
 }

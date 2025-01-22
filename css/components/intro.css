@@ -257,6 +257,10 @@ body {
   pointer-events: none;  /* Prevent any interaction */
   user-select: none;    /* Prevent selection */
   transform: none !important; /* Prevent any transform */
+  background-size: 120%;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
 }
 
 .intro-tone-label {

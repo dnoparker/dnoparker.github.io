@@ -122,19 +122,36 @@ const showInstruction = (index) => {
     
     // Handle button state based on current instruction
     if (index === 0) {
-      // Oval positioning instruction
-      instructionNext.disabled = !isInPosition;
-      instructionNext.classList.toggle('button-disabled', !isInPosition);
-    } else if (index === 1) {
-      // Tone selection instruction
-      instructionNext.disabled = !isToneSelected;
-      instructionNext.classList.toggle('button-disabled', !isToneSelected);
+      // Oval positioning instruction - hide the next button, show only center button
+      instructionNext.classList.add('hidden');
+      
+      // Show center button during first instruction
+      const centerButton = document.getElementById('center-button');
+      centerButton.classList.remove('hidden');
+      centerButton.disabled = !isInPosition;
+      centerButton.classList.toggle('button-disabled', !isInPosition);
     } else {
-      instructionNext.disabled = false;
-      instructionNext.classList.remove('button-disabled');
+      // Show next button for other instructions
+      instructionNext.classList.remove('hidden');
+      
+      // Hide center button for all other instructions
+      const centerButton = document.getElementById('center-button');
+      centerButton.classList.add('hidden');
+      
+      if (index === 1) {
+        // Tone selection instruction
+        instructionNext.disabled = !isToneSelected;
+        instructionNext.classList.toggle('button-disabled', !isToneSelected);
+      } else {
+        instructionNext.disabled = false;
+        instructionNext.classList.remove('button-disabled');
+      }
     }
   } else {
     instructionPanel.classList.add('hidden');
+    // Make sure center button is hidden when instructions are done
+    const centerButton = document.getElementById('center-button');
+    centerButton.classList.add('hidden');
   }
 };
 
@@ -344,8 +361,11 @@ const handleSwipeGesture = () => {
   const absX = Math.abs(distanceX);
   const absY = Math.abs(distanceY);
 
+  // Increase minimum swipe threshold for vertical swipes
+  const minVerticalSwipe = minSwipeDistance * 2;
+
   // Only trigger if swipe distance exceeds minimum in either direction
-  if (absX > minSwipeDistance || absY > minSwipeDistance) {
+  if (absX > minSwipeDistance || absY > minVerticalSwipe) {
     // If horizontal movement is greater than vertical, handle as left/right swipe
     if (absX > absY) {
       if (distanceX < 0) {
@@ -356,14 +376,15 @@ const handleSwipeGesture = () => {
         faceObjects.forEach(obj => obj.swipeRight());
       }
     } else {
-      // Handle vertical swipe for wedge rotation
+      // Handle vertical swipe for wedge rotation with smooth animation
       faceObjects.forEach(obj => {
         if (obj instanceof WedgeChart) {
-          // Convert vertical swipe to rotation
-          const rotationAmount = (distanceY * 0.001); // Similar sensitivity to scroll
-          obj.rotationZ += rotationAmount;
-          obj.rotationZ = obj.rotationZ % (2 * Math.PI);
-          obj.group.rotation.z = obj.rotationZ;
+          // Calculate target rotation
+          const rotationAmount = (distanceY * 0.0005);
+          const targetRotation = obj.rotationZ + rotationAmount;
+          
+          // Animate to target rotation
+          obj.animateRotation(targetRotation % (2 * Math.PI));
         }
       });
     }
@@ -613,6 +634,11 @@ const startAR = async () => {
       // Update both oval and button state
       isInPosition = absDistance < 3;
       oval.classList.toggle('in-position', isInPosition);
+      
+      // Update center button state
+      const centerButton = document.getElementById('center-button');
+      centerButton.disabled = !isInPosition;
+      centerButton.classList.toggle('button-disabled', !isInPosition);
       
       // Update next button state if we're on the first instruction
       if (currentInstructionIndex === 0) {
@@ -1170,7 +1196,13 @@ document.addEventListener('DOMContentLoaded', () => {
     ovalInstructionModal.classList.add('hidden');
   });
 
-  // Add this to your DOMContentLoaded event listener or initialization code
+  // Add click handler for center button
+  document.getElementById('center-button').addEventListener('click', () => {
+    if (!isInPosition) return; // Don't do anything if not in position
+    instructionPanel.classList.add('hidden');
+    handleSendToAI();
+  });
+
   document.getElementById('start-over').addEventListener('click', () => {
     window.location.href = 'index.html';
   });
@@ -1218,6 +1250,7 @@ const startCountdown = () => {
     document.getElementById('tone-circles').classList.remove('visible');
     //document.getElementById('oval').classList.add('hidden');
     instructionPanel.classList.add('hidden');
+    document.getElementById('center-button').classList.add('hidden');
     
     // Show countdown
     countdownOverlay.classList.add('visible');

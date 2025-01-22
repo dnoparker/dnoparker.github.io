@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Shades - Tone Detector</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/styles.css">
@@ -19,23 +19,8 @@
         <p>
           <b>Shades Tone Detector</b> is an revolutionary app that helps you find the perfect shade of dancewear for your skin tone. Using the latest AI technology, we can analyse your skin tone and suggest the perfect shade of dancewear for you.
         </p>
-        <div class="intro-tone-circles">
-          <div class="intro-tone-circle-item">
-            <div class="intro-tone-circle" style="background-color: #8D5524;" title="Bojangles"></div>
-            <span class="intro-tone-label">Bojangles</span>
-          </div>
-          <div class="intro-tone-circle-item">
-            <div class="intro-tone-circle" style="background-color: #C68642;" title="Raven"></div>
-            <span class="intro-tone-label">Raven</span>
-          </div>
-          <div class="intro-tone-circle-item">
-            <div class="intro-tone-circle" style="background-color: #E0AC69;" title="Uday"></div>
-            <span class="intro-tone-label">Uday</span>
-          </div>
-          <div class="intro-tone-circle-item">
-            <div class="intro-tone-circle" style="background-color: #F1C27D;" title="Pearl"></div>
-            <span class="intro-tone-label">Pearl</span>
-          </div>
+        <div class="intro-tone-circles" id="intro-tone-circles">
+          <!-- Tone circles will be dynamically inserted here -->
         </div>
         <p>
           We offer four shades of dancewear to ensure that everyone can find a perfect match. Let's see how it works!
@@ -43,7 +28,7 @@
 
         <!-- small text -->
         <p class="intro-small-text">
-          <i>Note: V0.1 - This is a demo version of the app. The shades are not yet available for purchase.</i>
+          <i>Note: V0.2 - This is a demo version of the app. The shades are not yet available for purchase.</i>
         </p>  
 
       </div>
@@ -119,6 +104,33 @@
       <button class="secondary" onclick="showTutorial()">Back</button>
     </div>
   </nav>
+
+  <script type="module">
+    import { tones } from './js/tones.js';
+    
+    // Create intro tone circles dynamically
+    function createIntroToneCircles() {
+      const container = document.getElementById('intro-tone-circles');
+      tones.forEach(tone => {
+        const item = document.createElement('div');
+        item.className = 'intro-tone-circle-item';
+        
+        const circle = document.createElement('div');
+        circle.className = 'intro-tone-circle';
+        circle.style.backgroundImage = `url(${tone.texture})`;       
+        const label = document.createElement('span');
+        label.className = 'intro-tone-label';
+        label.textContent = tone.name;
+        
+        item.appendChild(circle);
+        item.appendChild(label);
+        container.appendChild(item);
+      });
+    }
+    
+    // Create the circles when the page loads
+    createIntroToneCircles();
+  </script>
 
   <script>
     function goToApp(event) {

@@ -355,38 +355,16 @@ const handleGetAverageColors = (event) => {
 /**
  * Handles the swipe gestures based on distance and direction.
  */
-const handleSwipeGesture = () => {
-  const distanceX = endX - startX;
-  const distanceY = endY - startY;
-  const absX = Math.abs(distanceX);
-  const absY = Math.abs(distanceY);
+const handleSwipeGesture = (deltaX, deltaY) => {
+  const absX = Math.abs(deltaX);
+  const absY = Math.abs(deltaY);
 
-  // Increase minimum swipe threshold for vertical swipes
-  const minVerticalSwipe = minSwipeDistance * 2;
-
-  // Only trigger if swipe distance exceeds minimum in either direction
-  if (absX > minSwipeDistance || absY > minVerticalSwipe) {
-    // If horizontal movement is greater than vertical, handle as left/right swipe
-    if (absX > absY) {
-      if (distanceX < 0) {
-        // Swipe left
-        faceObjects.forEach(obj => obj.swipeLeft());
-      } else {
-        // Swipe right
-        faceObjects.forEach(obj => obj.swipeRight());
-      }
+  // Only consider horizontal swipes if they're predominantly horizontal
+  if (absX > minSwipeDistance && absX > absY) {
+    if (deltaX < 0) {
+      faceObjects.forEach(obj => obj.swipeLeft());
     } else {
-      // Handle vertical swipe for wedge rotation with smooth animation
-      faceObjects.forEach(obj => {
-        if (obj instanceof WedgeChart) {
-          // Calculate target rotation
-          const rotationAmount = (distanceY * 0.0005);
-          const targetRotation = obj.rotationZ + rotationAmount;
-          
-          // Animate to target rotation
-          obj.animateRotation(targetRotation % (2 * Math.PI));
-        }
-      });
+      faceObjects.forEach(obj => obj.swipeRight());
     }
   }
 };
@@ -407,13 +385,20 @@ const handleTouchStart = (event) => {
 const handleTouchMove = (event) => {
   endX = event.touches[0].clientX;
   endY = event.touches[0].clientY;
+  
+  // Add real-time rotation during drag
+  const deltaY = endY - startY;
+  handleDragRotation(deltaY);
+  startY = endY; // Update start position for next move
 };
 
 /**
  * Handles touch end event.
  */
 const handleTouchEnd = () => {
-  handleSwipeGesture();
+  const deltaX = endX - startX;
+  const deltaY = endY - startY;
+  handleSwipeGesture(deltaX, deltaY);
 };
 
 /**
@@ -432,13 +417,21 @@ const handleMouseDown = (event) => {
 const handleMouseMove = (event) => {
   endX = event.clientX;
   endY = event.clientY;
+  
+  if(event.buttons === 1) { // Only if left mouse button is held
+    const deltaY = endY - startY;
+    handleDragRotation(deltaY);
+    startY = endY;
+  }
 };
 
 /**
  * Handles mouse up event.
  */
 const handleMouseUp = () => {
-  handleSwipeGesture();
+  const deltaX = endX - startX;
+  const deltaY = endY - startY;
+  handleSwipeGesture(deltaX, deltaY);
 };
 
 /**
@@ -1271,4 +1264,23 @@ const startCountdown = () => {
 };
 
 const confirmToneModal = document.getElementById('confirm-tone-modal');
+
+// Add this new function for rotation handling
+const handleDragRotation = (deltaY) => {
+  faceObjects.forEach(obj => {
+    if (obj instanceof WedgeChart) {
+      // Convert vertical movement to rotation
+      const rotationSpeed = 0.005; // Adjust this value for sensitivity
+      obj.rotationZ += deltaY * rotationSpeed;
+      
+      // Apply rotation directly for immediate feedback
+      obj.group.rotation.z = obj.rotationZ;
+      
+      // Stop any existing animation
+      if (obj.rotationTween) {
+        obj.rotationTween.stop();
+      }
+    }
+  });
+};
 

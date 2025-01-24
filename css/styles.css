@@ -811,12 +811,12 @@ body {
   background-color: transparent;
   display: flex;
   justify-content: center;
-  align-items: flex-end; /* Changed back to flex-end to align at bottom */
+  align-items: center; /* Changed to center */
   z-index: 2000;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-  padding-bottom: 40px; /* Add padding from bottom */
+  padding-bottom: 0; /* Remove padding */
 }
 
 .countdown-overlay.visible {
@@ -824,6 +824,10 @@ body {
 }
 
 .countdown-capsule {
+  position: fixed; /* Add fixed positioning */
+  top: 75%; /* Match center button position */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Center horizontally */
   background-color: white;
   padding: 12px 30px;
   border-radius: 50px;
@@ -831,7 +835,7 @@ body {
   align-items: center;
   gap: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  margin-bottom: 20px; /* Add space from bottom */
+  margin-bottom: 0; /* Remove margin */
 }
 
 .capsule-divider {
@@ -890,6 +894,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-width: 400px;
+  padding: 30px;
 }
 
 .tone-preview {
@@ -936,15 +942,28 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 30px; /* Match thank you panel spacing */
 }
 
 .tone-confirmation .modal-button {
   flex: 1;
-  padding: 10px 20px;
-  font-size: 14px;
-  border-radius: 4px;
-  min-width: 0;
+  padding: 12px 30px; /* Match thank you panel button padding */
+  font-size: 16px; /* Match thank you panel button font size */
+  border-radius: 25px;
+  min-width: 120px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tone-confirmation .modal-button:hover {
+  background-color: var(--secondary-color);
+}
+
+.tone-confirmation .modal-button.secondary {
+  background-color: #666;
 }
 
 /* Media queries for the confirmation modal */

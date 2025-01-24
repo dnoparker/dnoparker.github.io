@@ -17,7 +17,8 @@ const faceObjects = [];
 const facialAnchors = [];
 
 let currentDisplayMode = DisplayMode[DISPLAY_SETTINGS.DEFAULT_DISPLAY_MODE];
-const minSwipeDistance = DISPLAY_SETTINGS.MIN_SWIPE_DISTANCE;
+const minSwipeDistance = 50; // Minimum horizontal swipe distance in pixels
+const deadZoneRatio = 0.3; // 30% of minSwipeDistance where movement is ignored
 
 // DOM Elements
 const videoElement = document.getElementById('webcam');
@@ -359,8 +360,14 @@ const handleSwipeGesture = (deltaX, deltaY) => {
   const absX = Math.abs(deltaX);
   const absY = Math.abs(deltaY);
 
-  // Only consider horizontal swipes if they're predominantly horizontal
-  if (absX > minSwipeDistance && absX > absY) {
+  // Calculate deadzone threshold (30% of min swipe distance)
+  const deadZone = minSwipeDistance * deadZoneRatio;
+
+  // Only consider horizontal swipes if:
+  // 1. Total horizontal movement exceeds minimum swipe distance
+  // 2. Horizontal movement is at least twice the vertical movement (2:1 ratio)
+  // 3. Movement exceeds the deadzone threshold
+  if (absX > minSwipeDistance && absX > absY * 2 && absX > deadZone) {
     if (deltaX < 0) {
       faceObjects.forEach(obj => obj.swipeLeft());
     } else {
@@ -523,16 +530,6 @@ const highlightSelectedMode = (selectedMode) => {
   });
 };
 
-/**
- * Handles keydown events for display mode toggle and debug features.
- * @param {KeyboardEvent} event 
- */
-const handleKeyDown = (event) => {
-  if (event.code === 'Space') {
-    event.preventDefault(); // Prevent default space bar behavior
-    toggleDisplayMode();
-  }
-};
 
 // Event Listener for Mode Button
 // modeButton.addEventListener('click', () => {
@@ -559,46 +556,6 @@ function setupEventListeners() {
   container.addEventListener('mousemove', handleMouseMove, false);
   container.addEventListener('mouseup', handleMouseUp, false);
 
-  // DEBUG: Add keyboard event listener for animation toggle
-  document.addEventListener('keydown', handleKeyDown);
-
-  // // Mode dropdown functionality
-  // const modeButton = document.getElementById('mode-button');
-  // const modeDropdownContent = document.querySelector('.mode-dropdown-content');
-
-  // modeButton.addEventListener('click', (e) => {
-  //   e.preventDefault();
-  //   const isOpen = modeButton.classList.contains('menu-open');
-  //   modeButton.classList.toggle('menu-open');
-    
-  //   if (!isOpen) {
-  //     // Show dropdown content with a slight delay to allow button animation
-  //     setTimeout(() => {
-  //       modeDropdownContent.classList.add('visible');
-  //     }, 150);
-  //   } else {
-  //     modeDropdownContent.classList.remove('visible');
-  //   }
-  // });
-
-  // document.querySelectorAll('.mode-option').forEach(item => {
-  //   item.addEventListener('click', (e) => {
-  //     e.preventDefault();
-  //     e.stopPropagation(); // Prevent event from bubbling up
-  //     const selectedMode = e.currentTarget.getAttribute('data-mode');
-  //     toggleDisplayMode(selectedMode);
-  //   });
-  // });
-
-  // // Close dropdown when clicking outside
-  // document.addEventListener('click', (e) => {
-  //   if (!e.target.closest('.mode-dropdown')) {
-  //     modeButton.classList.remove('menu-open');
-  //     modeDropdownContent.classList.remove('visible');
-  //   }
-  // });
-
-  // highlightSelectedMode(currentDisplayMode === DisplayMode.WEDGE ? 'wedge' : 'dots');
 }
 
 // -------------------------

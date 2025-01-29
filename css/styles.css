@@ -189,16 +189,18 @@ body {
   margin-top: 10px;
 }
 
-/* Tone circles styles */
+/* ======================
+   Tone Circles Section
+   ====================== */
 #tone-circles {
   position: fixed;
   left: 0px;
-  top: 240px;
-  display: flex;
+  top: 200px;
+  display: none;
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  gap: 25px;
+  gap: 15px;
   height: auto;
   padding-bottom: 20px;
   padding-left: 5px;
@@ -207,21 +209,29 @@ body {
   overflow-y: visible;
 }
 
+#tone-circles.visible {
+  display: flex;
+}
+
 .tone-circle-container {
   flex: 0 0 auto;
   min-width: auto;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: 8px;
   cursor: pointer;
   position: relative;
-  padding: 8px 15px; /* Added padding for the capsule */
-  margin-left: 3px;
-  border-radius: 25px; /* Added for capsule shape */
-  transition: background-color 0.3s ease; /* Smooth transition for background */
-  margin-top: 20px; /* Add space above each container for the label */
+  padding: 4px 15px;
+  margin-left: 10px;
+  border-radius: 25px;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+  justify-content: center;
+}
 
+.tone-circle-container.user-selected {
+  background-color: #8b6a4a7e;
 }
 
 .tone-circle {
@@ -229,7 +239,7 @@ body {
   height: 45px;
   min-width: 45px;
   border-radius: 50%;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.226);
   transition: transform 0.2s ease, border-color 0.2s ease;
   border: 3px solid transparent;
   box-sizing: border-box;
@@ -239,6 +249,15 @@ body {
   overflow: hidden;
 }
 
+.tone-circle-container.user-selected .tone-circle {
+  border: 2px solid white !important;
+  transform: scale(1.1);
+}
+
+.tone-circle-container:hover .tone-circle {
+  transform: scale(1.1);
+}
+
 .tone-name {
   margin: 0;
   font-size: 14px;
@@ -246,47 +265,32 @@ body {
   color: white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
+  text-align: center;
+  width: 100%;
+  min-width: 80px;
+  padding: 0 5px;
 }
 
-.tone-circle-container:hover .tone-circle {
-  transform: scale(1.1);
-}
-
-
-.tone-circle-container:active,
-.tone-circle-container:focus,
-.tone-circle:active,
-.tone-circle:focus {
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.ai-suggested-label {
-  display: none; /* Hide the old label */
-}
-
-
-.tone-circle-container.ai-suggested::before {
-  content: 'AI Suggested';
+/* AI Suggested Tag */
+.tone-circle-container::before {
+  content: '';
   position: absolute;
-  top: -20px;
+  top: -25px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 12px;
   color: white;
-  background-color: var(--primary-color);
-  padding: 3px 10px;
-  border-radius: 12px;
+  padding: 5px 15px;
+  border-radius: 15px;
   white-space: nowrap;
   z-index: 1;
   font-weight: 500;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* When both AI and user select the same tone */
-.tone-circle-container.ai-suggested.user-selected::before {
-  content: 'User + AI Selected';
+.tone-circle-container.ai-suggested::before {
+  content: 'AI Suggested';
+  background-color: var(--secondary-color);
 }
 
 /* Controls styles */
@@ -449,14 +453,14 @@ body {
   }
 
   #tone-circles {
-    top: 180px;
+    top: 120px;
     gap: 20px;
   }
 }
 
 @media screen and (max-width: 480px) {
   #tone-circles {
-    top: 160px;
+    top: 120px;
     gap: 15px;
   }
 
@@ -783,23 +787,12 @@ body {
 }
 
 .tone-circle-container.user-selected::before {
-  content: 'User Selected';
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: white;
-  background-color: var(--primary-color);
-  padding: 3px 10px;
-  border-radius: 12px;
-  white-space: nowrap;
-  z-index: 1;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* Removed */
 }
 
+.tone-circle-container.ai-suggested.user-selected::before {
+  /* Removed */
+}
 
 /* Add these styles for the countdown */
 .countdown-overlay {
@@ -1042,4 +1035,47 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   overflow: hidden;
+}
+
+/* New wrapper for circle + name */
+.tone-circle-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.tone-circle-container.user-selected .tone-circle {
+  border: 2px solid white !important;
+  transform: scale(1.1);
+}
+
+/* Swipe Tooltip */
+.swipe-tooltip {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 255, 255, 0.95);
+  color: var(--primary-color);
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 500;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1001; /* Above other elements */
+  animation: slideIn 0.5s ease-out;
+}
+
+.swipe-tooltip.visible {
+  display: flex;
+}
+
+@keyframes slideIn {
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
 }

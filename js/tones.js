@@ -31,6 +31,9 @@ function createToneCircles() {
     circleContainer.className = 'tone-circle-container';
     circleContainer.dataset.toneIndex = index;
 
+    const circleWrapper = document.createElement('div');
+    circleWrapper.className = 'tone-circle-wrapper';
+
     const circle = document.createElement('div');
     circle.className = 'tone-circle';
     circle.style.backgroundImage = `url(${tone.texture})`;
@@ -40,8 +43,10 @@ function createToneCircles() {
     nameLabel.className = 'tone-name';
     nameLabel.textContent = tone.name;
 
-    circleContainer.appendChild(circle);
-    circleContainer.appendChild(nameLabel);
+    circleWrapper.appendChild(circle);
+    circleWrapper.appendChild(nameLabel);
+    
+    circleContainer.appendChild(circleWrapper);
     
     circleContainer.addEventListener('click', () => {
       selectTone(index);

@@ -69,7 +69,7 @@ const instructions = [
     }
   },
   {
-    text: "Select your preferred tone from the options. Press next to continue.",
+    text: "Tap your preferred tone from the options. Press next to continue.",
     action: () => {
       const selectedTone = capturedData.userTone;
       const currentToneData = getCurrentTone();
@@ -957,7 +957,7 @@ const displayTextWithImage = async (text, imageUrl) => {
   // Format the display text and handle button visibility
   if (suggestedToneName && !hasErrorKeywords(text)) {
     // Valid tone found
-    resultText.textContent = `The fabric most suited for this person is ${suggestedToneName}`;
+    resultText.innerHTML = `ShadesFY suggests <strong>${suggestedToneName}</strong> for your skin tone`;
     continueButton.style.display = 'block';  
     retryButton.style.display = 'none';      
   } else {
@@ -989,6 +989,15 @@ const displayTextWithImage = async (text, imageUrl) => {
     // Move these lines here so they only show after clicking continue
     //document.querySelector('.mode-dropdown').classList.add('visible');
     document.getElementById('tone-circles').classList.add('visible');
+
+    // Show swipe tooltip
+    const tooltip = document.getElementById('swipe-tooltip');
+    tooltip.classList.add('visible');
+    
+    // Hide tooltip after 5 seconds
+    setTimeout(() => {
+      tooltip.classList.remove('visible');
+    }, 15000);
 
     // Make face objects visible before starting AI analysis
     faceObjects.forEach(obj => {

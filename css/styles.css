@@ -195,7 +195,7 @@ body {
 #tone-circles {
   position: fixed;
   left: 0px;
-  top: 200px;
+  top: 20px;
   display: none;
   flex-direction: column;
   justify-content: flex-start;
@@ -453,14 +453,14 @@ body {
   }
 
   #tone-circles {
-    top: 120px;
+    top: 20px;
     gap: 20px;
   }
 }
 
 @media screen and (max-width: 480px) {
   #tone-circles {
-    top: 120px;
+    top: 20px;
     gap: 15px;
   }
 
@@ -1078,4 +1078,36 @@ body {
 @keyframes slideIn {
   from { transform: translate(-50%, -20px); opacity: 0; }
   to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* Add height-based media query for compact layout */
+@media screen and (max-height: 620px) {
+  #tone-circles {
+    gap: 8px;
+    padding-top: 15px;
+  }
+
+  .tone-circle-container {
+    margin-top: 10px;
+    padding: 2px 15px;
+    gap: 4px;
+  }
+
+  .tone-circle {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+  }
+
+  .tone-name {
+    font-size: 12px;
+    min-width: 60px;
+  }
+
+  /* Adjust the AI suggested tag to be closer */
+  .tone-circle-container::before {
+    top: -20px;
+    font-size: 11px;
+    padding: 3px 10px;
+  }
 }

@@ -66,7 +66,11 @@
       </div>
     </div>
 
+  </div>
 
+  <div class="scroll-arrow">
+    <span>&#x2303;</span> <!-- Caret symbol -->
+  </div>
 
   <!-- Button Navigation -->
   <nav class="intro-nav">
@@ -138,11 +142,37 @@
       }
     }
 
+    // Handle scroll arrow visibility
+    const scrollArrow = document.querySelector('.scroll-arrow');
+    let isScrolling;
+    
+    // Add scroll listeners to all scrollable content areas
+    document.querySelectorAll('.intro-step-content').forEach(content => {
+      content.addEventListener('scroll', function() {
+        // Show/hide scroll arrow based on scroll position
+        if (this.scrollTop > 20) {
+          scrollArrow.classList.add('hidden');
+        } else {
+          scrollArrow.classList.remove('hidden');
+        }
+        
+        // Clear the existing timeout
+        window.clearTimeout(isScrolling);
+      });
+    });
+
+    // Reset arrow visibility when switching screens
+    function resetScrollArrow() {
+      scrollArrow.classList.remove('hidden');
+    }
+
+    // Update existing screen switching functions to reset arrow
     function showTutorial() {
       document.getElementById('intro-step').classList.remove('active');
       document.getElementById('tutorial-step').classList.add('active');
       document.getElementById('intro-nav-step').style.display = 'none';
       document.getElementById('tutorial-nav-step').style.display = 'flex';
+      resetScrollArrow(); // Reset arrow when switching to tutorial
     }
 
     function showIntro() {
@@ -150,6 +180,7 @@
       document.getElementById('intro-step').classList.add('active');
       document.getElementById('tutorial-nav-step').style.display = 'none';
       document.getElementById('intro-nav-step').style.display = 'flex';
+      resetScrollArrow(); // Reset arrow when switching to intro
     }
   </script>
 </body>

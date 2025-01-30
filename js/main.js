@@ -69,7 +69,7 @@ const instructions = [
     }
   },
   {
-    text: "Tap your preferred tone from the options. Press next to continue.",
+    text: "Tap your preferred tone and then press next to continue.",
     action: () => {
       const selectedTone = capturedData.userTone;
       const currentToneData = getCurrentTone();

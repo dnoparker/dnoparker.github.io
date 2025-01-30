@@ -195,7 +195,7 @@ body {
 #tone-circles {
   position: fixed;
   left: 0px;
-  top: 20px;
+  top: 80px; /* Changed from 20px to 80px to move it down */
   display: none;
   flex-direction: column;
   justify-content: flex-start;
@@ -453,14 +453,14 @@ body {
   }
 
   #tone-circles {
-    top: 20px;
+    top: 80px; /* Keep consistent with the new positioning */
     gap: 20px;
   }
 }
 
 @media screen and (max-width: 480px) {
   #tone-circles {
-    top: 20px;
+    top: 80px; /* Keep consistent with the new positioning */
     gap: 15px;
   }
 
@@ -1054,8 +1054,8 @@ body {
 .swipe-tooltip {
   position: fixed;
   top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 20px; /* Changed from left: 50% */
+  transform: none; /* Removed translateX(-50%) */
   background-color: rgba(255, 255, 255, 0.95);
   color: var(--primary-color);
   padding: 12px 25px;
@@ -1076,12 +1076,12 @@ body {
 }
 
 @keyframes slideIn {
-  from { transform: translate(-50%, -20px); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 /* Add height-based media query for compact layout */
-@media screen and (max-height: 620px) {
+@media screen and (max-height: 670px) {
   #tone-circles {
     gap: 8px;
     padding-top: 15px;

@@ -194,7 +194,7 @@ body {
    ====================== */
 #tone-circles {
   position: fixed;
-  left: 0px;
+  left:-24px;
   top: 80px; /* Changed from 20px to 80px to move it down */
   display: none;
   flex-direction: column;
@@ -203,7 +203,7 @@ body {
   gap: 15px;
   height: auto;
   padding-bottom: 20px;
-  padding-left: 5px;
+  padding-left: 0;
   width: auto;
   padding-top: 25px;
   overflow-y: visible;
@@ -222,9 +222,9 @@ body {
   gap: 8px;
   cursor: pointer;
   position: relative;
-  padding: 4px 15px;
+  padding: 8px 15px;
   margin-left: 10px;
-  border-radius: 25px;
+  border-radius: 0 0 25px 0;
   transition: background-color 0.3s ease;
   margin-top: 20px;
   justify-content: center;
@@ -275,22 +275,24 @@ body {
 .tone-circle-container::before {
   content: '';
   position: absolute;
-  top: -25px;
-  left: 55%;
-  transform: translateX(-50%);
+  top: -22px;
+  left: 0;
+  transform: none;
   font-size: 12px;
   color: white;
   padding: 5px 15px;
-  border-radius: 15px;
   white-space: nowrap;
   z-index: 1;
   font-weight: 500;
   letter-spacing: 0.5px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .tone-circle-container.ai-suggested::before {
-  content: 'ShadesFY Suggested';
-  background-color: var(--secondary-color);
+  content: 'Suggested';
+  background-color: var(--primary-color);
 }
 
 /* Controls styles */
@@ -1011,6 +1013,15 @@ body {
   z-index: 1000;
   min-width: 150px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 25px;
+}
+
+.center-button i {
+  font-size: 16px;
+  margin-right: 4px;
 }
 
 /* Media query for the center button */
@@ -1018,6 +1029,10 @@ body {
   .center-button {
     padding: 10px 20px;
     min-width: 120px;
+    font-size: 14px;
+  }
+
+  .center-button i {
     font-size: 14px;
   }
 }
@@ -1103,7 +1118,8 @@ body {
 
   .tone-circle-container {
     margin-top: 10px;
-    padding: 2px 15px;
+    padding: 8px 15px;
+    left: 10px;
     gap: 4px;
   }
 
@@ -1118,9 +1134,9 @@ body {
     min-width: 60px;
   }
 
-  /* Adjust the AI suggested tag to be closer */
+  /* Update the AI suggested tag position */
   .tone-circle-container::before {
-    top: -20px;
+    top: -19px; /* Keep consistent with main style */
     font-size: 11px;
     padding: 3px 10px;
   }

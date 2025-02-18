@@ -62,7 +62,7 @@ let isInPosition = false;
 // Add this function to manage instructions
 const instructions = [
   {
-    text: "Position your face inside the oval and hold still. Press next to continue.",
+    text: "Position your face inside the oval and hold still. Press next to capture your image.",
     action: () => {
       instructionPanel.classList.add('hidden');
       handleSendToAI();
@@ -338,7 +338,7 @@ const showLoading = () => {
   if (!loadingText) {
     // Create and append the text element if it doesn't exist
     loadingText = document.createElement('div');
-    loadingText.innerText = 'Analysing Face';
+    loadingText.innerText = 'Analysing Face in Image...';
     loadingText.className = 'loading-text'; // Optional: Add a class for styling
     loadingAnimation.appendChild(loadingText);
   }

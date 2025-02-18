@@ -2,22 +2,22 @@ const tones = [
     {
       name: "PEARL",
       hex: "#deba9d",
-      texture: "./images/textures/pearl_texture.png"
+      texture: "./images/textures/pearl_texture.webp"
     },
     {
       name: "UDAY",
       hex: "#ad856b",
-      texture: "./images/textures/uday_texture.png"
+      texture: "./images/textures/uday_texture.webp"
     },
     {
       name: "RAVEN",
       hex: "#947a5e",
-      texture: "./images/textures/raven_texture.png"
+      texture: "./images/textures/raven_texture.webp"
     },
     {
       name: "BOJANGLES",
       hex: "#5d4b3c",
-      texture: "./images/textures/bojangles_texture.png"
+      texture: "./images/textures/bojangles_texture.webp"
     }
   ];
 
@@ -72,9 +72,27 @@ function selectTone(index) {
     updateUISelection(index);
     console.log('Tone selected:', index, tones[index].name);
 
-    // Dispatch the 'toneSelected' event
-    const event = new CustomEvent('toneSelected', { detail: { index } });
-    document.dispatchEvent(event);
+  // Instead of letting the tooltip time out, update its text to indicate the chosen tone.
+  const tooltip = document.getElementById('swipe-tooltip');
+  if (tooltip) {
+    tooltip.classList.add('visible'); // Ensure it stays visible
+    const tooltipSpan = tooltip.querySelector('span');
+    if (tooltipSpan) {
+      tooltipSpan.innerHTML = `You have choosen <span class="selected-tone">${tones[index].name}</span>`;
+    } else {
+      tooltip.innerHTML = `You have choosen <span class="selected-tone">${tones[index].name}</span>`;
+    }
+    
+    // Hide the icon within the tooltip
+    const tooltipIcon = tooltip.querySelector('i');
+    if (tooltipIcon) {
+      tooltipIcon.style.display = 'none';
+    }
+  }
+
+  // Dispatch the 'toneSelected' event
+  const event = new CustomEvent('toneSelected', { detail: { index } });
+  document.dispatchEvent(event);
 }
 
 function updateUISelection(index) {

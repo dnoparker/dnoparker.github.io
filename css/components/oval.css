@@ -6,16 +6,33 @@
   transform: translate(-50%, -50%);
   width: min(60vw, 50vh, 500px);
   height: calc(min(60vw, 50vh, 500px) * 1.25);
-  border: 3px solid rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 50%;
-  transition: background-color 0.3s ease;
   z-index: 999;
   pointer-events: none;
 }
 
-.oval.in-position {
+.inner-oval {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 85%;
+  height: 85%;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  transform-origin: center center;
+}
 
+.oval.in-position {
   border-color: rgba(0, 255, 0, 0.8);
+}
+
+.inner-oval.in-position {
+  border-color: rgba(0, 255, 0, 0.8);
+  width: 100%;
+  height: 100%;
 }
 
 .oval.hidden {

@@ -71,6 +71,12 @@ const instructions = [
   {
     text: "Tap your preferred tone and then press next to continue.",
     action: () => {
+      // Remove the tooltip if it is visible when the confirmation screen appears
+      const tooltip = document.getElementById('swipe-tooltip');
+      if (tooltip) {
+        tooltip.classList.remove('visible');
+      }
+      
       const selectedTone = capturedData.userTone;
       const currentToneData = getCurrentTone();
       const toneColor = currentToneData?.tone?.hex || '#FFFFFF';
@@ -84,11 +90,12 @@ const instructions = [
         instructionPanel.classList.add('hidden');
         
         try {
-          await storeCapturedData();
           
           userToneText.textContent = capturedData.userTone.toUpperCase() || 'no tone';
           aiToneText.textContent = capturedData.aiTone.toUpperCase() || 'no tone';
           thankYouModal.classList.remove('hidden');
+
+          await storeCapturedData();
           
           capturedData = {
             apiImage: null,
@@ -97,6 +104,7 @@ const instructions = [
             aiTone: null,
             aiResponse: null
           };
+          
           checkCapturedData();
           
           sendToAIButton.disabled = true;
@@ -335,7 +343,10 @@ const showLoading = () => {
     loadingAnimation.appendChild(loadingText);
   }
 
+  const oval = document.getElementById('oval');
+  const innerOval = document.getElementById('inner-oval');
   oval.classList.add('hidden');
+  innerOval.classList.add('hidden');
 };
 
 /**
@@ -467,7 +478,15 @@ const handleSendToAI = async () => {
     console.log('AI response received and processed');
   } catch (error) {
     console.error('Error processing AI request:', error);
-    displayText('Error processing AI request');
+    
+    // If the error was due to face position, don't show error message
+    if (error.message !== 'Face moved out of position') {
+      displayText('Error processing AI request');
+    }
+    
+    // Re-enable the send to AI button
+    sendToAIButton.disabled = false;
+    sendToAIButton.classList.remove('button-disabled');
   }
 };
 
@@ -581,11 +600,36 @@ const startAR = async () => {
       const distanceX = vector.x - camera.position.x;
       const absDistance = Math.abs(distanceX);
       
-      // Update both oval and button state
-      isInPosition = absDistance < 3;
-      oval.classList.toggle('in-position', isInPosition);
+      // Calculate scale factor based on distance
+      const maxDistance = 6; // Maximum distance to start scaling
+      const minDistance = 3; // Distance at which we're "in position"
+      const innerOval = document.getElementById('inner-oval');
       
-      // Update center button state
+      if (absDistance < minDistance) {
+        // Snap to full size when in position
+        isInPosition = true;
+        oval.classList.add('in-position');
+        innerOval.classList.add('in-position');
+      } else if (absDistance < maxDistance) {
+        // Dynamic scaling when approaching
+        isInPosition = false;
+        oval.classList.remove('in-position');
+        innerOval.classList.remove('in-position');
+        
+        // Calculate scale between 0.85 (default) and 1.0 based on distance
+        const scale = 0.85 + (0.15 * (1 - ((absDistance - minDistance) / (maxDistance - minDistance))));
+        innerOval.style.width = `${scale * 100}%`;
+        innerOval.style.height = `${scale * 100}%`;
+      } else {
+        // Reset to default size when too far
+        isInPosition = false;
+        oval.classList.remove('in-position');
+        innerOval.classList.remove('in-position');
+        innerOval.style.width = '85%';
+        innerOval.style.height = '85%';
+      }
+      
+      // Update button states
       const centerButton = document.getElementById('center-button');
       centerButton.disabled = !isInPosition;
       centerButton.classList.toggle('button-disabled', !isInPosition);
@@ -995,9 +1039,8 @@ const displayTextWithImage = async (text, imageUrl) => {
     tooltip.classList.add('visible');
     
     // Hide tooltip after 5 seconds
-    setTimeout(() => {
-      tooltip.classList.remove('visible');
-    }, 15000);
+   // setTimeout(() => {
+     //, 15000);
 
     // Make face objects visible before starting AI analysis
     faceObjects.forEach(obj => {
@@ -1201,13 +1244,12 @@ const countdownNumber = document.getElementById('countdown-number');
 
 // Add this new function
 const startCountdown = () => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let count = 3;
+    let countdownInterval;
     
     // Hide UI elements
-    //document.querySelector('.mode-dropdown').classList.remove('visible');
     document.getElementById('tone-circles').classList.remove('visible');
-    //document.getElementById('oval').classList.add('hidden');
     instructionPanel.classList.add('hidden');
     document.getElementById('center-button').classList.add('hidden');
     
@@ -1215,7 +1257,28 @@ const startCountdown = () => {
     countdownOverlay.classList.add('visible');
     countdownNumber.textContent = count;
     
-    const countdownInterval = setInterval(() => {
+    // Function to clean up and stop countdown
+    const stopCountdown = () => {
+      clearInterval(countdownInterval);
+      countdownOverlay.classList.remove('visible');
+      
+      // Show UI elements again
+      document.getElementById('center-button').classList.remove('hidden');
+      instructionPanel.classList.remove('hidden');
+      
+      // Reset to first instruction
+      currentInstructionIndex = 0;
+      showInstruction(currentInstructionIndex);
+    };
+    
+    countdownInterval = setInterval(() => {
+      // Check if face is still in position
+      if (!isInPosition) {
+        stopCountdown();
+        reject(new Error('Face moved out of position'));
+        return;
+      }
+      
       count--;
       if (count > 0) {
         countdownNumber.textContent = count;

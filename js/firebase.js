@@ -16,38 +16,43 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export const storeToneChoices = async (userSelectedTone, aiSuggestedTone, imageUrl = null, aiResponse = null) => {
+export const storeToneChoices = async (
+  userSelectedTone,
+  aiSuggestedTone,
+  imageUrl = null,
+  aiResponse = null
+) => {
   try {
-    // Clean up the values
-    const cleanUserTone = userSelectedTone?.trim() || null;
-    const cleanAiTone = aiSuggestedTone?.trim() || null;
-    const cleanImageUrl = imageUrl?.trim() || null;
-    const cleanAiResponse = aiResponse?.trim() || null;
-
-    console.log('storeToneChoices called with:', {
-      userSelectedTone: cleanUserTone,
-      aiSuggestedTone: cleanAiTone,
-      imageUrl: cleanImageUrl,
-      aiResponse: cleanAiResponse
-    });
-
-    const data = {
-      userSelectedTone: cleanUserTone,
-      aiSuggestedTone: cleanAiTone,
-      timestamp: new Date().toISOString(),
-      aiResponse: cleanAiResponse
+    // Clean up the values.
+    const payload = {
+      userSelectedTone: userSelectedTone?.trim() || null,
+      aiSuggestedTone: aiSuggestedTone?.trim() || null,
+      imageUrl: imageUrl?.trim() || null,
+      aiResponse: aiResponse?.trim() || null
     };
 
-    if (cleanImageUrl) {
-      data.imageUrl = cleanImageUrl;
-    }
+    // Cloud Functions endpoint URL that performs domain checking.
+    const endpointURL =
+      'https://us-central1-shadeshk-f7a95.cloudfunctions.net/writeToFirestore';
 
-    const docRef = await addDoc(collection(db, "toneChoices"), data);
-    console.log('Document written with ID:', docRef.id);
+    const response = await fetch(endpointURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
     
-    return docRef;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error ${response.status}: ${errorText}`);
+    }
+    
+    const result = await response.text();
+    console.log('Cloud Function response:', result);
+    return result;
   } catch (error) {
-    console.error("Error storing tone choices:", error);
+    console.error('Error storing tone choices via Cloud Function:', error);
     throw error;
   }
 };

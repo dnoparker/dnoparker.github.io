@@ -276,7 +276,7 @@ body {
   content: '';
   position: absolute;
   top: -25px;
-  left: 50%;
+  left: 55%;
   transform: translateX(-50%);
   font-size: 12px;
   color: white;
@@ -289,7 +289,7 @@ body {
 }
 
 .tone-circle-container.ai-suggested::before {
-  content: 'AI Suggested';
+  content: 'ShadesFY Suggested';
   background-color: var(--secondary-color);
 }
 
@@ -1054,30 +1054,44 @@ body {
 .swipe-tooltip {
   position: fixed;
   top: 20px;
-  right: 20px; /* Changed from left: 50% */
-  transform: none; /* Removed translateX(-50%) */
+  left: 0;
+  right: 0;
+  margin: 0 auto;
   background-color: rgba(255, 255, 255, 0.95);
-  color: var(--primary-color);
+  color: var(--secondary-color);
   padding: 12px 25px;
-  border-radius: 25px;
+  border-radius: 30px;
   font-family: var(--font-family);
   font-size: 14px;
   font-weight: 500;
   display: none;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  z-index: 1001; /* Above other elements */
+  z-index: 1001;
   animation: slideIn 0.5s ease-out;
+  width: calc(100% - 40px);
+  max-width: 600px;
+  box-sizing: border-box;
 }
 
 .swipe-tooltip.visible {
   display: flex;
 }
 
+/* Add styles for the selected tone name */
+.swipe-tooltip .selected-tone {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 15px;
+  font-weight: 400;
+}
+
 @keyframes slideIn {
-  from { transform: translateX(20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 /* Add height-based media query for compact layout */

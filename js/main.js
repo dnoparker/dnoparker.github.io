@@ -1037,10 +1037,6 @@ const displayTextWithImage = async (text, imageUrl) => {
     // Show swipe tooltip
     const tooltip = document.getElementById('swipe-tooltip');
     tooltip.classList.add('visible');
-    
-    // Hide tooltip after 5 seconds
-   // setTimeout(() => {
-     //, 15000);
 
     // Make face objects visible before starting AI analysis
     faceObjects.forEach(obj => {

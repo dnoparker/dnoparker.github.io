@@ -1001,7 +1001,7 @@ const displayTextWithImage = async (text, imageUrl) => {
   // Format the display text and handle button visibility
   if (suggestedToneName && !hasErrorKeywords(text)) {
     // Valid tone found
-    resultText.innerHTML = `ShadesFY suggests <strong>${suggestedToneName}</strong> for your skin tone`;
+    resultText.innerHTML = `Shadify suggests <strong>${suggestedToneName}</strong> for your skin tone`;
     continueButton.style.display = 'block';  
     retryButton.style.display = 'none';      
   } else {

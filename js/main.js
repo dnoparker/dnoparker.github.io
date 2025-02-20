@@ -278,6 +278,8 @@ function initializeWebcam() {
   navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
       videoElement.srcObject = stream;
+      // Ensure the video starts playing, especially needed on Safari
+      return videoElement.play();
     })
     .catch(error => {
       console.error('Error accessing webcam:', error);
@@ -691,19 +693,26 @@ const uploadImageToServer = async (base64Image) => {
 };
 
 const captureScreenshot = async () => {
-  // Create an offscreen canvas
   const offscreenCanvas = document.createElement('canvas');
   offscreenCanvas.width = renderer.domElement.width;
   offscreenCanvas.height = renderer.domElement.height;
   const ctx = offscreenCanvas.getContext('2d');
 
-  // Draw the mirrored video feed
+  // Prepare for mirroring
   ctx.translate(offscreenCanvas.width, 0);
   ctx.scale(-1, 1);
-  initializeWebcam();
+
+  // Ensure the video is ready to be captured
+  if (videoElement.readyState < videoElement.HAVE_CURRENT_DATA) {
+    await new Promise(resolve =>
+      videoElement.addEventListener('playing', resolve, { once: true })
+    );
+  }
+  
+  // Draw the current frame from the video element
   ctx.drawImage(videoElement, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-  // Reset transformation
+  // Reset any transformations if necessary
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
   // Get positions of top and bottom anchor points

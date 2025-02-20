@@ -477,7 +477,7 @@ const handleSendToAI = async () => {
       }
     });
 
-    await captureScreenshot();
+    await captureScreenshotUsingImageBitmap();
     
     // The API call and text display are handled within captureScreenshot
     console.log('AI response received and processed');
@@ -692,27 +692,28 @@ const uploadImageToServer = async (base64Image) => {
   }
 };
 
-const captureScreenshot = async () => {
+const captureScreenshotUsingImageBitmap = async () => {
   const offscreenCanvas = document.createElement('canvas');
   offscreenCanvas.width = renderer.domElement.width;
   offscreenCanvas.height = renderer.domElement.height;
   const ctx = offscreenCanvas.getContext('2d');
 
-  // Prepare for mirroring
-  ctx.translate(offscreenCanvas.width, 0);
-  ctx.scale(-1, 1);
-
-  // Ensure the video is ready to be captured
+  // Wait for the video to have sufficient data
   if (videoElement.readyState < videoElement.HAVE_CURRENT_DATA) {
     await new Promise(resolve =>
       videoElement.addEventListener('playing', resolve, { once: true })
     );
   }
   
-  // Draw the current frame from the video element
-  ctx.drawImage(videoElement, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+  // Use createImageBitmap to capture the current frame of the video
+  const bitmap = await createImageBitmap(videoElement);
+  
+  // Prepare for mirroring
+  ctx.translate(offscreenCanvas.width, 0);
+  ctx.scale(-1, 1);
 
-  // Reset any transformations if necessary
+  // Draw the bitmap onto your offscreen canvas
+  ctx.drawImage(bitmap, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
   // Get positions of top and bottom anchor points

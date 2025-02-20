@@ -323,6 +323,11 @@ export class WedgeChart extends FaceObject {
      * @param {Event} event - The click event
      */
     onClick(event) {
+        // Return early if the wedge isn't visible
+        if (!this.group.visible) {
+            return;
+        }
+
         super.onClick(event); // Call the parent class onClick method
 
         const intersects = this.raycaster.intersectObjects(this.group.children, true);

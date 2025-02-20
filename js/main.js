@@ -692,6 +692,22 @@ const uploadImageToServer = async (base64Image) => {
   }
 };
 
+async function captureUpdatedFrame() {
+  // Create an offscreen canvas
+  const offscreenCanvas = document.createElement('canvas');
+  offscreenCanvas.width = videoElement.videoWidth || renderer.domElement.width;
+  offscreenCanvas.height = videoElement.videoHeight || renderer.domElement.height;
+  const ctx = offscreenCanvas.getContext('2d');
+
+  // Explicitly draw the current frame from the video element.
+  // This forces Safari to render the freshest frame.
+  ctx.drawImage(videoElement, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+  // Now capture the updated frame from the offscreen canvas.
+  const bitmap = await createImageBitmap(offscreenCanvas);
+  return bitmap;
+}
+
 const captureScreenshotUsingImageBitmap = async () => {
   const offscreenCanvas = document.createElement('canvas');
   offscreenCanvas.width = renderer.domElement.width;
@@ -706,7 +722,7 @@ const captureScreenshotUsingImageBitmap = async () => {
   }
   
   // Use createImageBitmap to capture the current frame of the video
-  const bitmap = await createImageBitmap(videoElement);
+  const bitmap = await captureUpdatedFrame();
   
   // Prepare for mirroring
   ctx.translate(offscreenCanvas.width, 0);

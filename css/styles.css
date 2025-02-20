@@ -801,14 +801,6 @@ body {
   opacity: 0.7;
 }
 
-.tone-circle-container.user-selected::before {
-  /* Removed */
-}
-
-.tone-circle-container.ai-suggested.user-selected::before {
-  /* Removed */
-}
-
 /* Add these styles for the countdown */
 .countdown-overlay {
   position: fixed;

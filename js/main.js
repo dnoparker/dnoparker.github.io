@@ -697,6 +697,7 @@ const captureScreenshot = async () => {
   // Draw the mirrored video feed
   ctx.translate(offscreenCanvas.width, 0);
   ctx.scale(-1, 1);
+  initializeWebcam();
   ctx.drawImage(videoElement, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
   // Reset transformation

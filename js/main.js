@@ -272,17 +272,12 @@ function addFaceObject(anchorIndex) {
  * Initializes the webcam video stream.
  */
 function initializeWebcam() {
-  // Set required attributes on video element
-  videoElement.setAttribute('playsinline', '');
   videoElement.setAttribute('autoplay', '');
-  
+  videoElement.setAttribute('playsinline', '');
+  videoElement.setAttribute('muted', '');
   navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
       videoElement.srcObject = stream;
-      // Explicitly call play() and handle any errors
-      return videoElement.play().catch(playError => {
-        console.error('Error playing video:', playError);
-      });
     })
     .catch(error => {
       console.error('Error accessing webcam:', error);
@@ -705,6 +700,7 @@ const captureScreenshot = async () => {
   // Draw the mirrored video feed
   ctx.translate(offscreenCanvas.width, 0);
   ctx.scale(-1, 1);
+  initializeWebcam();
   ctx.drawImage(videoElement, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
   // Reset transformation

@@ -120,8 +120,24 @@
   </script>
 
   <script>
+    function isWebGL2Available() {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGL2RenderingContext && canvas.getContext('webgl2'));
+      } catch (e) {
+        return false;
+      }
+    }
+
     function goToApp(event) {
       event.preventDefault();
+      console.log('Checking WebGL2 compatibility...');
+      
+      if (!isWebGL2Available()) {
+        alert('Your device does not support WebGL 2.0, which is required to run this application. Please try using a different device or modern browser.');
+        return;
+      }
+
       console.log('Attempting to navigate to app.html...');
       try {
         window.location.href = 'app.html';

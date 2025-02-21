@@ -30,7 +30,7 @@
 
         <!-- small text -->
         <p class="intro-small-text">
-          <i>Note: V0.4.3 - This is a demo version of the app.</i>
+          <i>Note: V0.4 - This is a demo version of the app.</i>
         </p>  
 
       </div>
@@ -158,29 +158,40 @@
       }
     }
 
-    // Handle scroll arrow visibility
-    const scrollArrow = document.querySelector('.scroll-arrow');
-    let isScrolling;
-    
-    // Add scroll listeners to all scrollable content areas
+    // Function to check if an element needs scrolling
+    function isScrollable(element) {
+      return element.scrollHeight > element.clientHeight;
+    }
+
+    // Function to update scroll arrow visibility
+    function updateScrollArrowVisibility() {
+      const scrollArrow = document.querySelector('.scroll-arrow');
+      const activeStep = document.querySelector('.intro-step.active .intro-step-content');
+      
+      if (!activeStep || !isScrollable(activeStep)) {
+        scrollArrow.classList.add('hidden');
+      } else if (activeStep.scrollTop <= 20) {
+        scrollArrow.classList.remove('hidden');
+      } else {
+        scrollArrow.classList.add('hidden');
+      }
+    }
+
+    // Add scroll event listeners to all scrollable content areas
     document.querySelectorAll('.intro-step-content').forEach(content => {
-      content.addEventListener('scroll', function() {
-        // Show/hide scroll arrow based on scroll position
-        if (this.scrollTop > 20) {
-          scrollArrow.classList.add('hidden');
-        } else {
-          scrollArrow.classList.remove('hidden');
-        }
-        
-        // Clear the existing timeout
-        window.clearTimeout(isScrolling);
-      });
+      content.addEventListener('scroll', updateScrollArrowVisibility);
     });
 
-    // Reset arrow visibility when switching screens
+    // Update arrow visibility when switching screens
     function resetScrollArrow() {
-      scrollArrow.classList.remove('hidden');
+      updateScrollArrowVisibility();
     }
+
+    // Call on initial load
+    document.addEventListener('DOMContentLoaded', updateScrollArrowVisibility);
+
+    // Update visibility when window is resized
+    window.addEventListener('resize', updateScrollArrowVisibility);
 
     // Update existing screen switching functions to reset arrow
     function showTutorial() {

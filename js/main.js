@@ -603,26 +603,30 @@ const startAR = async () => {
       const vector = new THREE.Vector3();
       centerAnchor.group.getWorldPosition(vector);
       const distanceX = vector.x - camera.position.x;
-      const absDistance = Math.abs(distanceX);
+      const distanceY = vector.y - camera.position.y;
+      const absDistanceX = Math.abs(distanceX);
+      const absDistanceY = Math.abs(distanceY);
       
       // Calculate scale factor based on distance
       const maxDistance = 6; // Maximum distance to start scaling
       const minDistance = 3; // Distance at which we're "in position"
       const innerOval = document.getElementById('inner-oval');
       
-      if (absDistance < minDistance) {
+      // Check if both X and Y distances are within acceptable range
+      if (absDistanceX < minDistance && absDistanceY < minDistance) {
         // Snap to full size when in position
         isInPosition = true;
         oval.classList.add('in-position');
         innerOval.classList.add('in-position');
-      } else if (absDistance < maxDistance) {
+      } else if (absDistanceX < maxDistance && absDistanceY < maxDistance) {
         // Dynamic scaling when approaching
         isInPosition = false;
         oval.classList.remove('in-position');
         innerOval.classList.remove('in-position');
         
-        // Calculate scale between 0.85 (default) and 1.0 based on distance
-        const scale = 0.85 + (0.15 * (1 - ((absDistance - minDistance) / (maxDistance - minDistance))));
+        // Calculate scale between 0.85 (default) and 1.0 based on the larger of the two distances
+        const maxAbsDistance = Math.max(absDistanceX, absDistanceY);
+        const scale = 0.85 + (0.15 * (1 - ((maxAbsDistance - minDistance) / (maxDistance - minDistance))));
         innerOval.style.width = `${scale * 100}%`;
         innerOval.style.height = `${scale * 100}%`;
       } else {

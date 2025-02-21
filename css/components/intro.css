@@ -20,20 +20,12 @@ body {
   overflow: hidden; /* Prevent container scroll */
 }
 
-/* Desktop/landscape layout */
-@media screen and (min-width: 768px) and (orientation: landscape) {
-  .intro-content {
-    left: 50%;
-    width: 700px;
-    transform: translateX(-50%);
-  }
-}
 
 /* Common text styles */
 .intro-content h1 {
   color: var(--primary-color);
   font-family: var(--font-family);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 500;
   margin-bottom: 20px;
   letter-spacing: 0.5px;
@@ -43,7 +35,7 @@ body {
 .intro-content li {
   color: var(--secondary-color);
   font-family: var(--font-family);
-  font-size: 16px;
+  font-size: 24px;
   line-height: 1.6;
   margin-left: 20px;
   margin-right: 20px;
@@ -54,6 +46,23 @@ body {
   text-align: left;
 }
 
+
+/* Desktop/landscape layout */
+@media screen and (min-width: 768px) {
+  .intro-content {
+    left: 50%;
+    width: 700px;
+    transform: translateX(-50%);
+
+  }
+  .intro-content p {
+    font-size: 24px;
+  }
+  .intro-content h1 {
+    font-size: 48px;
+  }
+
+}
 /* Terms list */
 .terms-list {
   text-align: left;
@@ -133,7 +142,7 @@ body {
   width: 100%;
   max-width: 400px;
   margin: 0 auto;
-  gap: 10px;
+  gap: 30px;
 }
 
 /* Button styles */

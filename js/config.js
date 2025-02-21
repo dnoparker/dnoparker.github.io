@@ -64,7 +64,9 @@ export const DISPLAY_SETTINGS = {
 // API Settings
 export const API_ENDPOINTS = {
   CLAUDE_VISION: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToClaudeVision',
-  VISION_API_MULTI: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToVisionAPIMulti'
+  VISION_API_MULTI: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToVisionAPIMulti',
+  FIREBASE_CONFIG: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/getFirebaseConfig',
+  WRITE_TO_FIRESTORE: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/writeToFirestore'
 };
 
 // Face Anchor Points

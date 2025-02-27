@@ -6,7 +6,7 @@ import { FaceObject } from './faceObject.js'; // Import the base FaceObject clas
 import { FaceDots } from './faceDots.js';
 import { DisplayMode } from './displayMode.js';
 import { storeToneChoices, storeRefusal } from './firebase.js';
-import { debug, isClaude, CLAUDE_MODEL, GPT_MODEL, SYSTEM_PROMPT, AI_PROMPT, DISPLAY_SETTINGS, API_ENDPOINTS, FACE_ANCHOR_POINTS, CANVAS_SETTINGS, storeImages, showDebugUI } from './config.js';
+import { debug, isClaude, CLAUDE_MODEL, GPT_MODEL, SYSTEM_PROMPT, AI_PROMPT, DISPLAY_SETTINGS, API_ENDPOINTS, FACE_ANCHOR_POINTS, CANVAS_SETTINGS, storeImages, showDebugUI, URL_SETTINGS } from './config.js';
 
 // -------------------------
 // Global Variables
@@ -1236,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('start-over').addEventListener('click', () => {
-    window.location.href = 'index.html';
+    window.location.href = URL_SETTINGS.STORE_URL;
   });
 });
 

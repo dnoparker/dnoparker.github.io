@@ -4,6 +4,11 @@ export const isClaude = true; // Set to true to use Claude Vision API instead of
 export const storeImages = true;
 export const showDebugUI = false; // New variable to control debug UI elements
 
+// URL Settings
+export const URL_SETTINGS = {
+  STORE_URL: 'https://shades-dancewear.com/' // URL for the "Back to Store" button
+};
+
 // API Models
 export const CLAUDE_MODEL = "claude-3-5-sonnet-20241022";
 export const GPT_MODEL = "gpt-4o";

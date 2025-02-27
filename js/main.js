@@ -673,7 +673,7 @@ const uploadImageToServer = async (base64Image) => {
     
     // Generate filename with timestamp
     const filename = `capture_${Date.now()}.png`;
-    const imageUrl = `https://hotknife.co.uk/imageuploader_1/uploads/${filename}`;
+    const imageUrl = `${API_ENDPOINTS.PHP_UPLOADS_DIR}${filename}`;
     
     // Log the URL for easier access
     console.log('Image URL:', imageUrl);
@@ -681,7 +681,7 @@ const uploadImageToServer = async (base64Image) => {
     // Send to PHP server in background
     const formData = new FormData();
     formData.append('image', blob, filename);
-    fetch('https://hotknife.co.uk/imageuploader_1/upload.php', {
+    fetch(API_ENDPOINTS.PHP_UPLOAD, {
       method: 'POST',
       body: formData
     }).catch(error => console.error('PHP upload error:', error));

@@ -63,10 +63,12 @@ export const DISPLAY_SETTINGS = {
 
 // API Settings
 export const API_ENDPOINTS = {
-  CLAUDE_VISION: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToClaudeVision',
-  VISION_API_MULTI: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/sendToVisionAPIMulti',
-  FIREBASE_CONFIG: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/getFirebaseConfig',
-  WRITE_TO_FIRESTORE: 'https://us-central1-shadeshk-f7a95.cloudfunctions.net/writeToFirestore'
+  CLAUDE_VISION: 'https://us-central1-shadify-c69f4.cloudfunctions.net/sendToClaudeVision',
+  VISION_API_MULTI: 'https://us-central1-shadify-c69f4.cloudfunctions.net/sendToVisionAPIMulti',
+  FIREBASE_CONFIG: 'https://us-central1-shadify-c69f4.cloudfunctions.net/getFirebaseConfig',
+  WRITE_TO_FIRESTORE: 'https://us-central1-shadify-c69f4.cloudfunctions.net/writeToFirestore',
+  PHP_UPLOAD: 'https://hotknife.co.uk/imageuploader_1/upload.php',
+  PHP_UPLOADS_DIR: 'https://hotknife.co.uk/imageuploader_1/uploads/'
 };
 
 // Face Anchor Points
